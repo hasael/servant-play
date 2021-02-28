@@ -18,6 +18,7 @@ import Data.Pool
 import Data.ByteString
 import Control.Monad.IO.Class
 import GHC.Generics
+import Network.Wai.Middleware.RequestLogger
 
 data User = User
   { 
@@ -31,7 +32,7 @@ type API = "users" :> Get '[JSON] [User]
 instance FromRow User
 
 startApp :: Pool Connection -> IO ()
-startApp connectionsPool = run 8080 $ app connectionsPool
+startApp connectionsPool = run 8080 $ (logStdoutDev . app) connectionsPool
 
 app :: Pool Connection -> Application
 app connectionsPool = serve api $ server connectionsPool
