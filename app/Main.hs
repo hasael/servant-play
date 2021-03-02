@@ -3,7 +3,7 @@
 module Main where
 
 import Lib
-import LocalConfig
+import AppConfig
 import Database.PostgreSQL.Simple
 import Data.Pool
 import Data.Yaml
@@ -14,6 +14,7 @@ main = do
      config <- readConfig
      print config
      connectionsPool <- initConnection $ (connectionString . db) config
+     initDb connectionsPool
      startApp connectionsPool
 
 initConnection :: String -> IO (Pool Connection)
@@ -25,3 +26,6 @@ initConnection connStr = createPool (connectPostgreSQL $ pack connStr)
 
 readConfig :: IO AppConfig
 readConfig = decodeFileThrow "./local-config.yaml" 
+
+initDb :: Pool Connection -> IO ()
+initDb connectionsPool = withResource connectionsPool $ \conn -> execute_ conn "CREATE TABLE IF NOT EXISTS users (id bigserial not null, name text not null, last_name text not null, amount float8 not null)" >> return ()

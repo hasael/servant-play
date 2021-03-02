@@ -41,6 +41,7 @@ library
     , wai-extra
     , wai
     , warp
+    , mtl
   default-language: Haskell2010
 
 executable servant-play-exe

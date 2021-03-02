@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module LocalConfig where
+module AppConfig where
 
 import Data.Aeson
 import GHC.Generics

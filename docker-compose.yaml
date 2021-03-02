@@ -1,0 +1,10 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:9.6.20
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_PASSWORD: playground
+    volumes:
+        -  ./data:/var/lib/postgresql/data

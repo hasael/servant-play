@@ -1,2 +1,2 @@
 db:
-  connectionString : host=localhost port=5432 dbname=postgres user=postgres password=vehicle
+  connectionString : host=localhost port=5435 dbname=postgres user=postgres password=playground
