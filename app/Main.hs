@@ -28,4 +28,7 @@ readConfig :: IO AppConfig
 readConfig = decodeFileThrow "./local-config.yaml" 
 
 initDb :: Pool Connection -> IO ()
-initDb connectionsPool = withResource connectionsPool $ \conn -> execute_ conn "CREATE TABLE IF NOT EXISTS users (id bigserial not null, name text not null, last_name text not null, amount float8 not null)" >> return ()
+initDb connectionsPool = withResource connectionsPool $ \conn -> do
+                         execute_ conn "CREATE TABLE IF NOT EXISTS users (id bigserial not null, name text not null, last_name text not null, amount float8 not null)" 
+                         execute_ conn "CREATE TABLE IF NOT EXISTS transactions (id bigserial not null, user_id int8 not null, amount float8 not null, transaction_type text not null )" 
+                         return ()
