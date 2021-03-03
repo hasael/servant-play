@@ -22,9 +22,10 @@ import Servant
 import Servant.Server
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromField (FromField, fromField)
+import Database.PostgreSQL.Simple.FromRow
 import Data.Pool
 import Data.ByteString (ByteString)
-import Control.Monad.IO.Class
+import Control.Monad.IO.Class ( MonadIO(liftIO) )
 import GHC.Generics
 import Network.Wai.Middleware.RequestLogger
 
@@ -52,13 +53,16 @@ data TransactionType = Debit | Credit
 -- $(deriveJSON defaultOptions ''User)
 type UserAPI = "users" :>
     (                              Get  '[JSON] [User]
-     :<|> Capture "id" Int      :> Get  '[JSON] (User)
+     :<|> Capture "id" Int      :> Get  '[JSON] User
      :<|> ReqBody '[JSON] User  :> Post '[JSON] NoContent 
     )
 
 type TransactionsAPI = "trx" :>
     (
-          Capture "id" Int   :>    Get  '[JSON] (Transaction)
+          Capture "id" Int   :>    Get  '[JSON] Transaction
+    :<|>  Capture "userId" Int   :>    Get  '[JSON] [Transaction]
+    :<|>  "credit" :> Capture "userId" Int   :> Capture "amount" Double   :>    Post  '[JSON] NoContent
+    :<|>  "debit" :> Capture "userId" Int   :> Capture "amount" Double   :>    Post  '[JSON] NoContent
     )
 
 type API = UserAPI :<|> TransactionsAPI
@@ -87,9 +91,14 @@ api = Proxy
 
 server :: Pool Connection -> Server API
 server connectionsPool = (withResource connectionsPool fetchUsers 
-                         :<|>  (\id -> (withResource connectionsPool $ \conn -> fetchUser conn id))
-                         :<|>  (\u -> (withResource connectionsPool $ \conn -> insertUser conn u)))
-                         :<|>  (\trxId -> (withResource connectionsPool $ \conn -> fetchTransaction conn trxId))
+                         :<|>  (\id -> withResource connectionsPool $ \conn -> fetchUser conn id)
+                         :<|>  (\u -> withResource connectionsPool $ \conn -> insertUser conn u))
+                         :<|>  (
+                           (\trxId -> withResource connectionsPool $ \conn -> fetchTransaction conn trxId)
+                         :<|>  (\id  -> withResource connectionsPool $ \conn -> fetchTransactions conn id )
+                         :<|>  (\id amount -> withResource connectionsPool $ \conn -> insertCreditTransaction conn id amount)
+                         :<|>  (\id amount -> withResource connectionsPool $ \conn -> insertDebitTransaction conn id amount)
+                         )
 
 fetchUsers :: Connection -> Handler[User]
 fetchUsers conn = liftIO $ query_ conn "SELECT id, name, last_name, amount from users"
@@ -108,3 +117,33 @@ fetchTransaction conn  transactonId = do
 
 insertUser :: Connection -> User -> Handler NoContent
 insertUser conn user = liftIO $ execute conn "INSERT INTO users VALUES (default,?,?,0)" [name (user::User), lastName user] >> return NoContent
+
+insertCreditTransaction :: Connection -> Int -> Double -> Handler NoContent
+insertCreditTransaction conn userId amount = liftIO $ do
+                          execute conn "INSERT INTO transactions(id, user_id, amount, transaction_type) VALUES (default,?,?,'Credit')" (userId, amount) 
+                          curramount :: [Only Double] <- query conn "SELECT amount from users where id =? "  (Only userId)
+                          let userAmount = case head curramount of
+                                                 Only a -> amount + a
+                          execute conn "UPDATE users set amount= ? where id=?" (userAmount, userId)
+                          return NoContent
+
+insertDebitTransaction :: Connection -> Int -> Double -> Handler NoContent
+insertDebitTransaction  conn userId amount =  do
+                         
+                          curramount :: [Only Double] <- liftIO $ query conn "SELECT amount from users where id =? "  (Only userId)
+                          let userAmount = case head curramount of
+                                                 Only a -> a - amount
+                          if userAmount <0 then
+                            throwError err403  
+                            else
+                              liftIO $ do
+                                 execute conn "INSERT INTO transactions(id, user_id, amount, transaction_type) VALUES (default,?,?,'Debit')" (userId, amount) 
+                                 execute conn "UPDATE users set amount= ? where id=?" (userAmount, userId)
+                                 return NoContent
+                            
+
+fetchTransactions :: Connection -> Int -> Handler [Transaction]
+fetchTransactions conn  userId = do
+                          users <- liftIO $ query conn "SELECT id, user_id, amount, transaction_type  from transactions where user_id = ?" (Only userId) 
+                          case users of [] -> throwError err404
+                                        a -> return a

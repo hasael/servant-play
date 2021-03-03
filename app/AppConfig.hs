@@ -3,14 +3,14 @@
 
 module AppConfig where
 
-import Data.Aeson
-import GHC.Generics
+import Data.Aeson ( FromJSON )
+import GHC.Generics ( Generic )
 
-data AppConfig = AppConfig {
+newtype AppConfig = AppConfig {
     db :: DbConfig
 } deriving (Show, Generic)
 
-data DbConfig = DbConfig {
+newtype DbConfig = DbConfig {
     connectionString :: String
 } deriving (Show, Generic)
 

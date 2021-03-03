@@ -1,0 +1,16 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "servant-play:lib"
+
+    - path: "./app/Main.hs"
+      component: "servant-play:exe:servant-play-exe"
+
+    - path: "./app/Paths_servant_play.hs"
+      component: "servant-play:exe:servant-play-exe"
+
+    - path: "./test"
+      component: "servant-play:test:servant-play-test"
+
+    - path: "./app/AppConfig.hs"
+      component: "servant-play:exe:servant-play-exe"
