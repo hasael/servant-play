@@ -28,7 +28,12 @@ library
   exposed-modules:
       Lib
   other-modules:
-      Paths_servant_play
+      Paths_servant_play,
+      Models,
+      TransactionRepository,
+      TransactionService,
+      UserRepository,
+      UserService
   hs-source-dirs:
       src
   build-depends:
@@ -47,7 +52,8 @@ library
 executable servant-play-exe
   main-is: Main.hs
   other-modules:
-      Paths_servant_play
+      Paths_servant_play,
+      AppConfig
   hs-source-dirs:
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N

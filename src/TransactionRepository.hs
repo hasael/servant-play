@@ -14,8 +14,8 @@ instance FromField TransactionType where
 
 instance FromRow Transaction
 
-getTransaction :: Connection -> Int -> IO (Maybe Transaction)
-getTransaction conn transactionId = do
+getTransactionById :: Connection -> Int -> IO (Maybe Transaction)
+getTransactionById conn transactionId = do
     rows <- query conn "SELECT id, user_id, amount, transaction_type  from transactions where id = ?" (Only transactionId) 
     case rows of
         [] -> return Nothing

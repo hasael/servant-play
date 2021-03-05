@@ -24,8 +24,8 @@ updateUserAmount conn userId amount = execute conn "UPDATE users set amount= ? w
 getAllUsers :: Connection -> IO [User]
 getAllUsers conn = query_ conn "SELECT id, name, last_name, amount from users"
 
-getUser :: Connection -> Int -> IO (Maybe User)
-getUser conn userId = do
+getUserById :: Connection -> Int -> IO (Maybe User)
+getUserById conn userId = do
     rows <- query conn "SELECT id, name, last_name, amount from users where id = ?" (Only userId) 
     case rows of
         [] -> return Nothing
