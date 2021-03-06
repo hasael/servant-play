@@ -26,7 +26,9 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Lib,
+      RealDb,
+      DbRepository
   other-modules:
       Paths_servant_play,
       Models,
@@ -74,7 +76,8 @@ test-suite servant-play-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_servant_play
+      Paths_servant_play,
+      TestDb
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N

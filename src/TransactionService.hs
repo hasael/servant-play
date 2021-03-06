@@ -1,15 +1,14 @@
 module TransactionService where
 
-import UserRepository
-import TransactionRepository
 import Models
 import Database.PostgreSQL.Simple ( Connection )
 import Control.Monad ( void )
+import DbRepository
 
 data DebitOpResult = CorrectDebit Transaction | DebitUserNotFound | IncorrectAmount
 data CreditOpResult = CorrectCredit Transaction | CreditUserNotFound
 
-createDebitTransaction :: Connection -> Int -> Double -> IO DebitOpResult
+createDebitTransaction :: DbRepository m a => a -> Int -> Double -> m DebitOpResult
 createDebitTransaction  conn userId amount =  do                       
                           curramount <- getUserAmount conn userId
                           let newAmount = (\a -> a - amount) <$> curramount
@@ -23,7 +22,7 @@ createDebitTransaction  conn userId amount =  do
                                         return IncorrectAmount
                             Nothing -> return DebitUserNotFound
 
-createCreditTransaction :: Connection -> Int -> Double -> IO CreditOpResult
+createCreditTransaction :: DbRepository m a => a -> Int -> Double -> m CreditOpResult
 createCreditTransaction  conn userId amount =  do                       
                           curramount <- getUserAmount conn userId
                           let newAmount = (+ amount) <$> curramount
@@ -35,8 +34,8 @@ createCreditTransaction  conn userId amount =  do
                                              Nothing -> return CreditUserNotFound
                             Nothing -> return CreditUserNotFound
 
-getUserTransactions :: Connection -> Int -> IO [Transaction]
+getUserTransactions :: DbRepository m a => a  -> Int -> m [Transaction]
 getUserTransactions = getTransactions 
 
-getTransaction :: Connection -> Int -> IO (Maybe Transaction)
+getTransaction :: DbRepository m a => a  -> Int -> m (Maybe Transaction)
 getTransaction  =  getTransactionById

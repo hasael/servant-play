@@ -8,7 +8,16 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts           #-} 
 
+
+-- This is an unfortunate hack.  Used to make the code slightly easier to
+-- follow.  See below for how we could fix it.
+{-# LANGUAGE UndecidableInstances       #-}
+
+-- This is another unfortunate hack to make the code simpler and easier to
+-- understand.  Described at the end of this file.
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Lib
     ( startApp
     , app
@@ -28,6 +37,7 @@ import Network.Wai.Middleware.RequestLogger
 import Models
 import UserService
 import TransactionService
+import DbRepository
 
 type UserAPI = "users" :>
     (                              Get  '[JSON] [User]
@@ -51,64 +61,64 @@ instance ToJSON User
 instance ToJSON Transaction
 instance ToJSON TransactionType
 
-startApp :: Pool Connection -> IO ()
+startApp :: DbRepository IO a =>  a-> IO ()
 startApp connectionsPool = run 8080 $ (logStdoutDev . app) connectionsPool
 
-app :: Pool Connection -> Application
+app ::  DbRepository IO a => a -> Application
 app connectionsPool = serve api $ server connectionsPool
 
 api :: Proxy API
 api = Proxy
 
-server :: Pool Connection -> Server API
-server connectionsPool = (withResource connectionsPool fetchUsers 
-                         :<|>  (\id -> withResource connectionsPool $ \conn -> fetchUser conn id)
-                         :<|>  (\u -> withResource connectionsPool $ \conn -> insertUser conn u))
+server :: DbRepository IO a =>  a -> Server API
+server connectionsPool = (fetchUsers connectionsPool
+                         :<|>  fetchUser connectionsPool
+                         :<|>  insertUser2 connectionsPool)
                          :<|>  (
-                           (\trxId -> withResource connectionsPool $ \conn -> fetchTransaction conn trxId)
-                         :<|>  (\id  -> withResource connectionsPool $ \conn -> fetchTransactions conn id )
-                         :<|>  (\id amount -> withResource connectionsPool $ \conn -> insertCreditTransaction conn id amount)
-                         :<|>  (\id amount -> withResource connectionsPool $ \conn -> insertDebitTransaction conn id amount)
+                           fetchTransaction connectionsPool 
+                         :<|>  fetchTransactions connectionsPool
+                         :<|>  insertCreditTransaction2 connectionsPool
+                         :<|>  insertDebitTransaction2 connectionsPool
                          )
 
-fetchUsers :: Connection -> Handler[User]
-fetchUsers conn = liftIO $ getUsers conn
+fetchUsers :: DbRepository IO a =>  a -> Handler [User]
+fetchUsers conn = liftIO $ getUsers conn 
 
 notFoundResponse :: Maybe a -> Handler a
 notFoundResponse Nothing = throwError err404
 notFoundResponse (Just r) = return r
 
 
-fetchUser :: Connection -> Int -> Handler User
+fetchUser ::  DbRepository IO a => a -> Int -> Handler User
 fetchUser conn userId = liftIO ( getUser conn userId )>>= notFoundResponse
 
-fetchTransaction :: Connection -> Int -> Handler Transaction
+fetchTransaction :: DbRepository IO a => a  -> Int -> Handler Transaction
 fetchTransaction conn transactionId = liftIO (getTransaction conn transactionId) >>= notFoundResponse
 
-insertUser :: Connection -> User -> Handler User
-insertUser conn user = do
+insertUser2 :: DbRepository IO a =>  a -> User -> Handler User
+insertUser2 conn user = do
     mu <- liftIO $ createUser conn user
     case mu of 
       Just u -> return u
       Nothing -> throwError err404 
 
-insertCreditTransaction :: Connection -> Int -> Double -> Handler Transaction
-insertCreditTransaction conn userId amount = do 
+insertCreditTransaction2 :: DbRepository IO a => a  -> Int -> Double -> Handler Transaction
+insertCreditTransaction2 conn userId amount = do 
                            result <- liftIO $ createCreditTransaction conn userId amount
                            case result of
                              CreditUserNotFound -> throwError err404
                              CorrectCredit t -> return t
                          
 
-insertDebitTransaction :: Connection -> Int -> Double -> Handler Transaction
-insertDebitTransaction  conn userId amount =  do 
+insertDebitTransaction2 :: DbRepository IO a => a  -> Int -> Double -> Handler Transaction
+insertDebitTransaction2  conn userId amount =  do 
                            result <- liftIO $ createDebitTransaction conn userId amount
                            case result of
                              DebitUserNotFound  -> throwError err404
                              IncorrectAmount -> throwError err403
                              CorrectDebit t -> return t
                             
-fetchTransactions :: Connection -> Int -> Handler [Transaction]
+fetchTransactions :: DbRepository IO a => a  -> Int -> Handler [Transaction]
 fetchTransactions conn userId =  do
                           users <- liftIO $ getUserTransactions conn userId
                           case users of [] -> throwError err404

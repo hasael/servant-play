@@ -1,15 +1,15 @@
 module UserService where
 
-import UserRepository
 import Models
 import Database.PostgreSQL.Simple ( Connection )
 import Control.Monad ( void )
+import DbRepository
 
-getUser :: Connection -> Int -> IO (Maybe User)
+getUser :: DbRepository m a=> a ->Int -> m (Maybe User)
 getUser = getUserById
 
-getUsers :: Connection -> IO [User]
+getUsers :: DbRepository m a => a -> m [User]
 getUsers  = getAllUsers
 
-createUser :: Connection -> User -> IO (Maybe User)
+createUser :: DbRepository m a => a -> User -> m (Maybe User)
 createUser = insertUser
