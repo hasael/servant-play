@@ -11,5 +11,5 @@ getUser = getUserById
 getUsers :: Connection -> IO [User]
 getUsers  = getAllUsers
 
-createUser :: Connection -> User -> IO ()
-createUser conn user = void (insertUser conn user)
+createUser :: Connection -> User -> IO (Maybe User)
+createUser = insertUser

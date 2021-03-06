@@ -31,5 +31,9 @@ getUserById conn userId = do
         [] -> return Nothing
         (x:_) -> return $ Just x
 
-insertUser :: Connection -> User -> IO Int64
-insertUser conn user = execute conn "INSERT INTO users VALUES (default,?,?,0)" [name (user::User), lastName user]
+insertUser :: Connection -> User -> IO (Maybe User)
+insertUser conn user = do
+    rows <- query conn "INSERT INTO users VALUES (default,?,?,0) RETURNING *" [name user, lastName user]
+    case rows of
+        [] -> return Nothing
+        (x:_) -> return $ Just x

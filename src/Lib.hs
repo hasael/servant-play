@@ -32,15 +32,15 @@ import TransactionService
 type UserAPI = "users" :>
     (                              Get  '[JSON] [User]
      :<|> Capture "id" Int      :> Get  '[JSON] User
-     :<|> ReqBody '[JSON] User  :> Post '[JSON] NoContent 
+     :<|> ReqBody '[JSON] User  :> Post '[JSON] User 
     )
 
 type TransactionsAPI = "trx" :>
     (
           Capture "id" Int   :>    Get  '[JSON] Transaction
     :<|>  Capture "userId" Int   :>    Get  '[JSON] [Transaction]
-    :<|>  "credit" :> Capture "userId" Int   :> Capture "amount" Double   :>    Post  '[JSON] NoContent
-    :<|>  "debit" :> Capture "userId" Int   :> Capture "amount" Double   :>    Post  '[JSON] NoContent
+    :<|>  "credit" :> Capture "userId" Int   :> Capture "amount" Double   :>    Post  '[JSON] Transaction
+    :<|>  "debit" :> Capture "userId" Int   :> Capture "amount" Double   :>    Post  '[JSON] Transaction
     )
 
 type API = UserAPI :<|> TransactionsAPI
@@ -85,24 +85,28 @@ fetchUser conn userId = liftIO ( getUser conn userId )>>= notFoundResponse
 fetchTransaction :: Connection -> Int -> Handler Transaction
 fetchTransaction conn transactionId = liftIO (getTransaction conn transactionId) >>= notFoundResponse
 
-insertUser :: Connection -> User -> Handler NoContent
-insertUser conn user = liftIO $ createUser conn user >> return NoContent
+insertUser :: Connection -> User -> Handler User
+insertUser conn user = do
+    mu <- liftIO $ createUser conn user
+    case mu of 
+      Just u -> return u
+      Nothing -> throwError err404 
 
-insertCreditTransaction :: Connection -> Int -> Double -> Handler NoContent
+insertCreditTransaction :: Connection -> Int -> Double -> Handler Transaction
 insertCreditTransaction conn userId amount = do 
                            result <- liftIO $ createCreditTransaction conn userId amount
                            case result of
                              CreditUserNotFound -> throwError err404
-                             CorrectCredit -> return NoContent
+                             CorrectCredit t -> return t
                          
 
-insertDebitTransaction :: Connection -> Int -> Double -> Handler NoContent
+insertDebitTransaction :: Connection -> Int -> Double -> Handler Transaction
 insertDebitTransaction  conn userId amount =  do 
                            result <- liftIO $ createDebitTransaction conn userId amount
                            case result of
                              DebitUserNotFound  -> throwError err404
                              IncorrectAmount -> throwError err403
-                             CorrectDebit -> return NoContent
+                             CorrectDebit t -> return t
                             
 fetchTransactions :: Connection -> Int -> Handler [Transaction]
 fetchTransactions conn userId =  do

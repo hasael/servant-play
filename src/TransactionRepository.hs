@@ -24,8 +24,16 @@ getTransactionById conn transactionId = do
 getTransactions :: Connection -> Int -> IO [Transaction]
 getTransactions conn userId = query conn "SELECT id, user_id, amount, transaction_type  from transactions where user_id = ?" (Only userId) 
 
-insertCreditTransaction :: Connection -> Int -> Double -> IO Int64
-insertCreditTransaction conn userId amount = execute conn "INSERT INTO transactions(id, user_id, amount, transaction_type) VALUES (default,?,?,'Credit')" (userId, amount) 
+insertCreditTransaction :: Connection -> Int -> Double -> IO (Maybe Transaction) 
+insertCreditTransaction conn userId amount = do
+    rows <- query conn "INSERT INTO transactions(id, user_id, amount, transaction_type) VALUES (default,?,?,'Credit') RETURNING *" (userId, amount) 
+    case rows of
+        [] -> return Nothing
+        (x:_) -> return $ Just x
 
-insertDebitTransaction :: Connection -> Int -> Double -> IO Int64
-insertDebitTransaction conn userId amount = execute conn "INSERT INTO transactions(id, user_id, amount, transaction_type) VALUES (default,?,?,'Debit')" (userId, amount) 
+insertDebitTransaction :: Connection -> Int -> Double -> IO (Maybe Transaction)
+insertDebitTransaction conn userId amount = do
+    rows <- query conn "INSERT INTO transactions(id, user_id, amount, transaction_type) VALUES (default,?,?,'Debit') RETURNING *" (userId, amount) 
+    case rows of
+        [] -> return Nothing
+        (x:_) -> return $ Just x

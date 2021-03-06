@@ -6,8 +6,8 @@ import Models
 import Database.PostgreSQL.Simple ( Connection )
 import Control.Monad ( void )
 
-data DebitOpResult = CorrectDebit | DebitUserNotFound | IncorrectAmount
-data CreditOpResult = CorrectCredit | CreditUserNotFound
+data DebitOpResult = CorrectDebit Transaction | DebitUserNotFound | IncorrectAmount
+data CreditOpResult = CorrectCredit Transaction | CreditUserNotFound
 
 createDebitTransaction :: Connection -> Int -> Double -> IO DebitOpResult
 createDebitTransaction  conn userId amount =  do                       
@@ -15,8 +15,10 @@ createDebitTransaction  conn userId amount =  do
                           let newAmount = (\a -> a - amount) <$> curramount
                           case newAmount of 
                             Just a -> if a>=0 then do
-                                         insertDebitTransaction conn userId amount
-                                         updateUserAmount conn userId a >> return CorrectDebit 
+                                         trx <- insertDebitTransaction conn userId amount
+                                         case trx of
+                                             Just t -> updateUserAmount conn userId a >> return (CorrectDebit t)
+                                             Nothing -> return DebitUserNotFound
                                       else
                                         return IncorrectAmount
                             Nothing -> return DebitUserNotFound
@@ -27,8 +29,10 @@ createCreditTransaction  conn userId amount =  do
                           let newAmount = (+ amount) <$> curramount
                           case newAmount of 
                             Just a ->  do
-                                         insertCreditTransaction conn userId amount
-                                         updateUserAmount conn userId a >> return CorrectCredit 
+                                         trx <- insertCreditTransaction conn userId amount
+                                         case trx of
+                                             Just t -> updateUserAmount conn userId a >> return (CorrectCredit t)
+                                             Nothing -> return CreditUserNotFound
                             Nothing -> return CreditUserNotFound
 
 getUserTransactions :: Connection -> Int -> IO [Transaction]
