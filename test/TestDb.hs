@@ -1,28 +1,27 @@
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-} 
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts           #-} 
 
 module TestDb where
 
-import Control.Monad
-import Data.Void
-import DbRepository
+import RealDb
+import Data.Pool
+import Database.PostgreSQL.Simple
+import TestBase
+import Test.QuickCheck
+import Test.QuickCheck.Monadic
 
-instance DbRepository IO () where
+instance CanPropertyTest IO where
+    toProperty = ioProperty 
 
-    getUserAmount _ userId = return $ Just 2
 
-    updateUserAmount pool userId amount = return ()
+monadicPropIO :: (CanPropertyTest IO) => PropertyM IO () -> Property
+monadicPropIO = monadic toProperty 
 
-    getAllUsers pool = return [] 
+initTestDbConnection = initConnection
 
-    getUserById pool userId = return Nothing
-
-    insertUser pool u = return Nothing
-
-    getTransactionById pool trxId = return Nothing
-
-    getTransactions pool userId = return [] 
-
-    insertCreditTransaction pool userId amount = return Nothing
-
-    insertDebitTransaction pool userId amount = return Nothing 
+cleanTables :: Pool Connection -> IO ()
+cleanTables connectionsPool = withResource connectionsPool $ \conn -> do
+                         execute_ conn "DELETE FROM users" 
+                         execute_ conn "DELETE FROM transactions" 
+                         return ()
