@@ -23,8 +23,7 @@ module Lib
     , app
     ) where
 
-import Data.Aeson
-import Data.Aeson.TH
+
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
@@ -54,12 +53,6 @@ type TransactionsAPI = "trx" :>
     )
 
 type API = UserAPI :<|> TransactionsAPI
-
-instance FromJSON User
-instance ToJSON User
-
-instance ToJSON Transaction
-instance ToJSON TransactionType
 
 startApp :: DbRepository IO a =>  a-> IO ()
 startApp connectionsPool = run 8080 $ (logStdoutDev . app) connectionsPool

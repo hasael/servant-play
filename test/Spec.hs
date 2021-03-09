@@ -8,13 +8,15 @@ import Test.Hspec
 import Test.Hspec.Wai
 import Test.Hspec.Wai.JSON
 import Network.Wai
+import Network.Wai.Test(assertStatus, SResponse (simpleStatus))
 import Network.HTTP.Types
-import Data.Void
 import TestDb
 import Properties
-import Data.Pool
-import Database.PostgreSQL.Simple
 import Test.QuickCheck
+import TestBase
+import Data.ByteString.Char8 
+import Data.ByteString.Lazy(toStrict)
+import Data.String
 
 main :: IO ()
 main = do 
@@ -33,12 +35,22 @@ main = do
 spec :: Application -> Spec
 spec app = with (return app ) $ do
     describe "POST /user" $ do
-        it "creates with 200" $ do
-             request methodPost "/users" [("Content-Type","application/json")] "{\"id\":1,\"name\":\"Isaac\",\"lastName\":\"Newton\",\"amount\":0}"  `shouldRespondWith` 200
+        it "creates and reads with 200" $ do
+             resp <- request methodPost "/users" [("Content-Type","application/json")] "{\"id\":1,\"name\":\"Isaac\",\"lastName\":\"Newton\",\"amount\":0}" 
+             return resp `shouldRespondWith` 200
+             let createdUserId = pack $ show $ idFromUserResponse resp
+             get ("/users/" <> createdUserId ) `shouldRespondWith` 200
+             let user = "{\"amount\":0,\"lastName\":\"Newton\",\"name\":\"Isaac\",\"id\":"<> createdUserId <>"}"
+             liftIO $ print createdUserId
+             get ("/users/"<> createdUserId) `shouldRespondWith` fromString (unpack user)
+
     describe "GET /users" $ do
         it "responds with 200" $ do
-            get "/users/1" `shouldRespondWith` 200
+            get "/users" `shouldRespondWith` 200
         it "responds with [User]" $ do
-            let users = "{\"id\":1,\"name\":\"Isaac\",\"lastName\":\"Newton\",\"amount\":0}"
-            get "/users/1" `shouldRespondWith` users
+            let users = "\"lastName\":\"Newton\",\"name\":\"Isaac\""
+            
+            get "/users/" `shouldRespondWith` ResponseMatcher  200 [] (MatchBody (\h b-> if not $ users`isInfixOf` toStrict b then
+                                                                    Just "response does not match"
+                                                                    else Nothing ))
 
