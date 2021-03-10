@@ -13,7 +13,7 @@ import RealTestDb
 import Properties
 import Test.QuickCheck
 import TestBase
-import Data.ByteString.Char8 ( unpack, pack, isInfixOf )
+import Data.ByteString.Char8 ( unpack, isInfixOf )
 import Data.ByteString.Lazy (toStrict)  
 import qualified Data.ByteString.Lazy as LB(ByteString) 
 import qualified Data.ByteString.Char8 as B( ByteString) 
@@ -46,12 +46,12 @@ spec app = with (return app ) $ do
              
              return resp `bodyShouldEqual` createdUser
 
-    describe "GET /user" $ do
+    describe "GET /users/" $ do
         it "responds with correct user" $ do
              let userToCreate = User 1 "Edmond" "Halley" 0
              resp <- postJson "/users" $ encode userToCreate
 
-             let createdUserId = pack . show $ idFromUserResponse resp
+             let createdUserId = toByteString $ idFromUserResponse resp
              let createdUser = strictEncode $ userToCreate `withId` idFromUserResponse resp
 
              get ("/users/" <> createdUserId) `bodyShouldEqual` createdUser
@@ -76,18 +76,19 @@ spec app = with (return app ) $ do
     describe "POST /trx/credit/" $ do
         it "response contains credit transaction" $ do
              let userToCreate = User 1 "Isaac" "Newton" 0
-             let myAmount = pack . show $ 10
+             let myAmount = 10 :: Double
              resp <- postJson "/users" $ encode userToCreate
-             let createdUserId = pack . show $ idFromUserResponse resp
-             trxResp <- request methodPost ("/trx/credit/" <> createdUserId <> "/" <> myAmount ) [] "" 
-             --let createdTransaction = decodeTransaction trxResp
-             return trxResp `bodyShouldContain` createdUserId
-             return trxResp `bodyShouldContain` myAmount
+             let createdUserId = idFromUserResponse resp
+             let createdUserIdStr = toByteString createdUserId
+             trxResp <- simplePost ("/trx/credit/" <> createdUserIdStr <> "/" <> toByteString myAmount )
+             let createdTransaction = decodeTransaction trxResp
+             liftIO $ transactionAmount createdTransaction `shouldBe` myAmount
+             liftIO $ userId createdTransaction `shouldBe` idFromUserResponse resp
 
         it "responds with 404 for not existing user" $ do
-             let myAmount = pack . show $ 10
-             let createdUserId = pack . show $ -1
-             request methodPost ("/trx/credit/" <> createdUserId <> "/" <> myAmount ) [] "" `shouldRespondWith` 404
+             let myAmount = toByteString 10
+             let createdUserId = toByteString $ -1
+             simplePost ("/trx/credit/" <> createdUserId <> "/" <> myAmount ) `shouldRespondWith` 404
 
 
     describe "GET /trx/credit/" $ do
@@ -95,52 +96,74 @@ spec app = with (return app ) $ do
              let userToCreate = User 1 "Isaac" "Newton" 0
 
              resp <- postJson "/users" $ encode userToCreate
-             let createdUserId = pack . show $ idFromUserResponse resp
-             trxResp <- request methodPost ("/trx/credit/" <> createdUserId <> "/10" ) [] "" 
+             let createdUserId = toByteString $ idFromUserResponse resp
+             trxResp <- simplePost ("/trx/credit/" <> createdUserId <> "/10" )
              get ("/trx/" <> createdUserId) `bodyShouldContain` toStrict (simpleBody trxResp)
 
     describe "POST /trx/debit/" $ do
         it "responds with 200 for user with amount" $ do
              let userToCreate = User 1 "Isaac" "Newton" 0
-             let creditAmount = pack . show $ 10
-             let debitAmount = pack . show $ 5
+             let creditAmount = 10
+             let debitAmount = 5
              resp <- postJson "/users" $ encode userToCreate
-             let createdUserId = pack . show $ idFromUserResponse resp
-             request methodPost ("/trx/credit/" <> createdUserId <> "/" <> creditAmount ) [] "" 
-             trxResp <- request methodPost ("/trx/debit/" <> createdUserId <> "/" <> debitAmount ) [] "" 
-             return trxResp `bodyShouldContain` createdUserId
-             return trxResp `bodyShouldContain` debitAmount
+             let createdUserId = idFromUserResponse resp
+             simplePost ("/trx/credit/" <> toByteString createdUserId <> "/" <> toByteString creditAmount )
+             trxResp <- simplePost ("/trx/debit/" <> toByteString createdUserId <> "/" <> toByteString debitAmount )
+             let createdTransaction = decodeTransaction trxResp
+             liftIO $ transactionAmount createdTransaction `shouldBe` debitAmount
+             liftIO $ userId createdTransaction `shouldBe` createdUserId
 
         it "responds with 403 for user without amount" $ do
              let userToCreate = User 1 "Isaac" "Newton" 0
-             let creditAmount = pack . show $ 5
-             let debitAmount = pack . show $ 6
+             let creditAmount = toByteString 5
+             let debitAmount = toByteString 6
              resp <- postJson "/users" $ encode userToCreate
-             let createdUserId = pack . show $ idFromUserResponse resp
-             request methodPost ("/trx/credit/" <> createdUserId <> "/" <> creditAmount ) [] "" 
-             request methodPost ("/trx/debit/" <> createdUserId <> "/" <> debitAmount ) [] "" `shouldRespondWith` 403
+             let createdUserId = toByteString $ idFromUserResponse resp
+             simplePost ("/trx/credit/" <> createdUserId <> "/" <> creditAmount ) 
+             simplePost ("/trx/debit/" <> createdUserId <> "/" <> debitAmount ) `shouldRespondWith` 403
 
 
         it "responds with 404 for not existing user" $ do
-             let myAmount = pack . show $ 10
-             let createdUserId = pack . show $ -1
-             request methodPost ("/trx/debit/" <> createdUserId <> "/" <> myAmount ) [] "" `shouldRespondWith` 404
+             let myAmount = toByteString 10
+             let createdUserId = toByteString $ -1
+             simplePost ("/trx/debit/" <> createdUserId <> "/" <> myAmount )`shouldRespondWith` 404
 
 
     describe "GET /trx/debit/" $ do
         it "response contains correct debit transaction" $ do
              let userToCreate = User 1 "Isaac" "Newton" 0
-             let creditAmount = pack . show $ 10
-             let debitAmount = pack . show $ 5
+             let creditAmount = toByteString 10
+             let debitAmount = toByteString 5
              resp <- postJson "/users" $ encode userToCreate
-             let createdUserId = pack . show $ idFromUserResponse resp
-             request methodPost ("/trx/credit/" <> createdUserId <> "/" <> creditAmount ) [] "" 
-             trxResp <- request methodPost ("/trx/debit/" <> createdUserId <> "/" <> debitAmount ) [] "" 
+             let createdUserId = toByteString $ idFromUserResponse resp
+             simplePost ("/trx/credit/" <> createdUserId <> "/" <> creditAmount )
+             trxResp <- simplePost ("/trx/debit/" <> createdUserId <> "/" <> debitAmount )
              get ("/trx/" <> createdUserId) `bodyShouldContain` toStrict (simpleBody trxResp)
+
+    describe "GET /user/ amount" $ do
+        it "response contains correct debit transaction" $ do
+             let userToCreate = User 1 "Isaac" "Newton" 0
+             let creditAmount = 10
+             let debitAmount = 5
+
+             createUserResp <- postJson "/users" $ encode userToCreate
+             let createdUserId = toByteString $ idFromUserResponse createUserResp
+             simplePost ("/trx/credit/" <> createdUserId <> "/" <> toByteString creditAmount )
+             firstGetUserResponse <- get ("/users/" <> createdUserId)
+             simplePost ("/trx/debit/" <> createdUserId <> "/" <> toByteString debitAmount )
+             secondGetUserResponse <- get ("/users/" <> createdUserId)
+             liftIO $ print firstGetUserResponse
+             let firstUserResp = decodeUser firstGetUserResponse
+             let secondUserResp = decodeUser secondGetUserResponse
+             liftIO $ userAmount firstUserResp `shouldBe` creditAmount
+             liftIO $ userAmount secondUserResp `shouldBe` creditAmount - debitAmount
              
 
 postJson :: B.ByteString -> LB.ByteString -> WaiSession st SResponse
 postJson path = request methodPost path [("Content-Type","application/json")] 
+
+simplePost :: B.ByteString -> WaiSession st SResponse
+simplePost path = request methodPost path [] "" 
 
 bodyShouldContain :: WaiSession () SResponse -> B.ByteString -> WaiExpectation ()
 bodyShouldContain = responseComparer $ \a b -> a `isInfixOf` toStrict b

@@ -5,8 +5,8 @@ import Test.QuickCheck ( Property )
 import Test.QuickCheck.Monadic
 import Data.Aeson
 import Network.Wai.Test
-import Data.ByteString.Char8 ( unpack , ByteString)
-import Data.ByteString.Lazy (toStrict) 
+import Data.ByteString.Char8 as B (pack, unpack , ByteString)
+import Data.ByteString.Lazy as L (toStrict, ByteString) 
 import Models as M
 import Data.Maybe ( fromJust )
 
@@ -25,8 +25,15 @@ idFromTrxResponse resp = fromJust $ (M.id :: M.Transaction -> Int) <$> decode (s
 decodeTransaction :: SResponse -> M.Transaction 
 decodeTransaction resp = fromJust $ decode (simpleBody resp)
 
+
+decodeUser:: SResponse -> M.User 
+decodeUser resp = fromJust $ decode (simpleBody resp)
+
 withId :: User -> Int -> User
 withId user userId = M.User userId (M.name user) (M.lastName user) ((M.amount :: M.User -> Double) user)
 
-strictEncode :: ToJSON a => a -> ByteString
+strictEncode :: ToJSON a => a -> B.ByteString
 strictEncode a = toStrict $ encode a
+
+toByteString ::Show a => a -> B.ByteString 
+toByteString = pack . show

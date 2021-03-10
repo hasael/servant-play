@@ -1,8 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Models where
 import GHC.Generics
+import GHC.Base ( Eq, Double, Int, String )
+import GHC.Show ( Show )
 import Data.Aeson ( ToJSON, FromJSON )
 
 instance FromJSON Transaction
@@ -25,8 +28,17 @@ data User = User
 
 data Transaction = Transaction
   { 
-    id       :: Int,
+    id      :: Int,
     userId   :: Int,
     amount   :: Double,
     transactionType :: TransactionType
   } deriving (Eq, Show, Generic)
+
+transactionAmount :: Transaction -> Double 
+transactionAmount = amount
+
+userAmount :: User -> Double 
+userAmount = amount
+
+getUserId :: User -> Int
+getUserId = id
