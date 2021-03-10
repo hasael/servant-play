@@ -86,6 +86,7 @@ test-suite servant-play-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
+    , async
     , base
     , hspec
     , bytestring

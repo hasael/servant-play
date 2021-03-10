@@ -6,6 +6,19 @@ module Main (main) where
 import Lib (app)
 import Test.Hspec
 import Test.Hspec.Wai
+    ( liftIO,
+      request,
+      get,
+      request,
+      shouldRespondWith,
+      with,
+      WaiExpectation,
+      WaiSession,
+      MatchBody(MatchBody),
+      ResponseMatcher(ResponseMatcher) )
+
+import Test.Hspec.Wai.Internal
+    ( WaiExpectation, WaiSession, runWaiSession, getApp )
 import Network.Wai
 import Network.Wai.Test(assertStatus, SResponse (simpleStatus, simpleBody))
 import Network.HTTP.Types
@@ -20,6 +33,9 @@ import qualified Data.ByteString.Char8 as B( ByteString)
 import Data.Aeson ( encode )
 import Models
 import GHC.Int ( Int64 )
+import GHC.Float ( int2Double )
+import Control.Concurrent.Async ( concurrently_ )
+import Control.Monad
 
 main :: IO ()
 main = do 
@@ -152,11 +168,23 @@ spec app = with (return app ) $ do
              firstGetUserResponse <- get ("/users/" <> createdUserId)
              simplePost ("/trx/debit/" <> createdUserId <> "/" <> toByteString debitAmount )
              secondGetUserResponse <- get ("/users/" <> createdUserId)
-             liftIO $ print firstGetUserResponse
              let firstUserResp = decodeUser firstGetUserResponse
              let secondUserResp = decodeUser secondGetUserResponse
              liftIO $ userAmount firstUserResp `shouldBe` creditAmount
              liftIO $ userAmount secondUserResp `shouldBe` creditAmount - debitAmount
+
+    describe "GET /user/ amount on concurrent calls" $ do
+        it "response contains correct debit transaction" $ do
+             let userToCreate = User 1 "Isaac" "Newton" 0
+             let creditAmount = 10
+             createUserResp <- postJson "/users" $ encode userToCreate
+             let createdUserId = toByteString $ idFromUserResponse createUserResp
+             app <- getApp 
+             let concurrency = 1
+             liftIO $ concurrentCallsN (simplePost ("/trx/credit/" <> createdUserId <> "/" <> toByteString creditAmount)) app concurrency
+             getUserResponse <- get ("/users/" <> createdUserId)
+             let userResponse = decodeUser getUserResponse
+             liftIO $ userAmount userResponse `shouldBe` creditAmount * int2Double concurrency
              
 
 postJson :: B.ByteString -> LB.ByteString -> WaiSession st SResponse
@@ -175,3 +203,13 @@ responseComparer :: (B.ByteString -> LB.ByteString -> Bool) -> WaiSession () SRe
 responseComparer fun context search = shouldRespondWith context $ ResponseMatcher 200 [] (MatchBody (\h b-> if not $ search `fun` b  then
                                                                     Just "response does not match"
                                                                     else Nothing ))
+
+concurrentCalls :: WaiSession () SResponse -> Application -> IO ()
+concurrentCalls call app = let twoCalls = concurrently_ (runWaiSession call app) (runWaiSession call app)
+                              in concurrently_ twoCalls twoCalls
+
+concurrentCallsN :: WaiSession () SResponse -> Application -> Int -> IO ()
+concurrentCallsN call app no = go call app 0
+                               where go c a n =
+                                       when ( n < no) $ concurrently_ (runWaiSession call app) (go c a (n+1))
+                                     
