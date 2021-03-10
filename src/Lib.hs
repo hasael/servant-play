@@ -46,8 +46,7 @@ type UserAPI = "users" :>
 
 type TransactionsAPI = "trx" :>
     (
-          Capture "id" Int   :>    Get  '[JSON] Transaction
-    :<|>  Capture "userId" Int   :>    Get  '[JSON] [Transaction]
+      Capture "userId" Int   :>    Get  '[JSON] [Transaction]
     :<|>  "credit" :> Capture "userId" Int   :> Capture "amount" Double   :>    Post  '[JSON] Transaction
     :<|>  "debit" :> Capture "userId" Int   :> Capture "amount" Double   :>    Post  '[JSON] Transaction
     )
@@ -68,8 +67,7 @@ server connectionsPool = (fetchUsers connectionsPool
                          :<|>  fetchUser connectionsPool
                          :<|>  insertUser2 connectionsPool)
                          :<|>  (
-                           fetchTransaction connectionsPool 
-                         :<|>  fetchTransactions connectionsPool
+                            fetchTransactions connectionsPool
                          :<|>  insertCreditTransaction2 connectionsPool
                          :<|>  insertDebitTransaction2 connectionsPool
                          )

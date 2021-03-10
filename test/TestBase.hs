@@ -22,6 +22,9 @@ idFromUserResponse resp = fromJust $ (M.id :: M.User -> Int) <$> decode (simpleB
 idFromTrxResponse :: SResponse -> Int
 idFromTrxResponse resp = fromJust $ (M.id :: M.Transaction -> Int) <$> decode (simpleBody resp)
 
+decodeTransaction :: SResponse -> M.Transaction 
+decodeTransaction resp = fromJust $ decode (simpleBody resp)
+
 withId :: User -> Int -> User
 withId user userId = M.User userId (M.name user) (M.lastName user) ((M.amount :: M.User -> Double) user)
 
