@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts           #-} 
 
-module TestDb where
+module RealTestDb where
 
 import RealDb
 import Data.Pool

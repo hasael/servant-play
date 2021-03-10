@@ -13,13 +13,10 @@ module Properties where
 
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
-import Test.QuickCheck.Arbitrary
 import DbRepository
-import Data.Maybe
+import Data.Maybe ( isJust )
 import qualified Models as M
-import TestBase
-import GHC.Generics
-import Generic.Random
+import Generic.Random ( genericArbitraryU )
 
 prop_reverse :: [Int] -> Bool
 prop_reverse xs = reverse (reverse xs) == xs

@@ -6,17 +6,20 @@ module Main (main) where
 import Lib (app)
 import Test.Hspec
 import Test.Hspec.Wai
-import Test.Hspec.Wai.JSON
 import Network.Wai
 import Network.Wai.Test(assertStatus, SResponse (simpleStatus))
 import Network.HTTP.Types
-import TestDb
+import RealTestDb
 import Properties
 import Test.QuickCheck
 import TestBase
-import Data.ByteString.Char8 
-import Data.ByteString.Lazy(toStrict)
-import Data.String
+import Data.ByteString.Char8 ( unpack, pack, isInfixOf )
+import Data.ByteString.Lazy (toStrict)  
+import qualified Data.ByteString.Lazy as LB(ByteString) 
+import qualified Data.ByteString.Char8 as B( ByteString) 
+import Data.Aeson ( encode )
+import Models
+import GHC.Int ( Int64 )
 
 main :: IO ()
 main = do 
@@ -35,22 +38,53 @@ main = do
 spec :: Application -> Spec
 spec app = with (return app ) $ do
     describe "POST /user" $ do
-        it "creates and reads with 200" $ do
-             resp <- request methodPost "/users" [("Content-Type","application/json")] "{\"id\":1,\"name\":\"Isaac\",\"lastName\":\"Newton\",\"amount\":0}" 
+        it "creates and responds with 200" $ do
+             let userToCreate = User 1 "Isaac" "Newton" 0
+
+             resp <- postJson "/users" $ encode userToCreate
+             let createdUser = strictEncode $ userToCreate `withId` idFromUserResponse resp
+             
              return resp `shouldRespondWith` 200
-             let createdUserId = pack $ show $ idFromUserResponse resp
-             get ("/users/" <> createdUserId ) `shouldRespondWith` 200
-             let user = "{\"amount\":0,\"lastName\":\"Newton\",\"name\":\"Isaac\",\"id\":"<> createdUserId <>"}"
-             liftIO $ print createdUserId
-             get ("/users/"<> createdUserId) `shouldRespondWith` fromString (unpack user)
+             return resp `bodyShouldEqual` createdUser
+
+    describe "GET /user" $ do
+        it "reads correct user" $ do
+             let userToCreate = User 1 "Edmond" "Halley" 0
+             resp <- postJson "/users" $ encode userToCreate
+
+             let createdUserId = pack . show $ idFromUserResponse resp
+             let createdUser = strictEncode $ userToCreate `withId` idFromUserResponse resp
+
+             get ("/users/" <> createdUserId) `bodyShouldEqual` createdUser
 
     describe "GET /users" $ do
         it "responds with 200" $ do
             get "/users" `shouldRespondWith` 200
-        it "responds with [User]" $ do
-            let users = "\"lastName\":\"Newton\",\"name\":\"Isaac\""
-            
-            get "/users/" `shouldRespondWith` ResponseMatcher  200 [] (MatchBody (\h b-> if not $ users`isInfixOf` toStrict b then
+        it "responds with correct [User]" $ do
+             let firstUserToCreate = User 1 "Johannes" "Kepler" 0
+             let secondUserToCreate = User 1 "Nicola" "Copernicus" 0
+
+             firstResp <- postJson "/users" $ encode firstUserToCreate
+             secondResp <- postJson "/users" $ encode secondUserToCreate
+
+             let firstCreatedUser = strictEncode $ firstUserToCreate `withId` idFromUserResponse firstResp
+             let secondCreatedUser = strictEncode $ secondUserToCreate `withId` idFromUserResponse secondResp
+
+             resp <- get "/users/"
+             return resp `bodyShouldContain` firstCreatedUser
+             return resp `bodyShouldContain` secondCreatedUser
+
+
+postJson :: B.ByteString -> LB.ByteString -> WaiSession st SResponse
+postJson path = request methodPost path [("Content-Type","application/json")] 
+
+bodyShouldContain :: WaiSession () SResponse -> B.ByteString -> WaiExpectation ()
+bodyShouldContain = responseComparer $ \a b -> a `isInfixOf` toStrict b
+
+bodyShouldEqual :: WaiSession () SResponse -> B.ByteString -> WaiExpectation ()
+bodyShouldEqual = responseComparer $ \a b -> a == toStrict b
+
+responseComparer :: (B.ByteString -> LB.ByteString -> Bool) -> WaiSession () SResponse -> B.ByteString -> WaiExpectation () 
+responseComparer fun context search = shouldRespondWith context $ ResponseMatcher 200 [] (MatchBody (\h b-> if not $ search `fun` b  then
                                                                     Just "response does not match"
                                                                     else Nothing ))
-

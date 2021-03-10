@@ -1,14 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 module TestBase where
-import Test.QuickCheck
+import Test.QuickCheck ( Property )
 import Test.QuickCheck.Monadic
 import Data.Aeson
-import Data.Aeson.Types
 import Network.Wai.Test
-import Data.ByteString.Char8 ( unpack )
+import Data.ByteString.Char8 ( unpack , ByteString)
+import Data.ByteString.Lazy (toStrict) 
 import Models as M
-import Data.Maybe
+import Data.Maybe ( fromJust )
 
 class (Monad m) => CanPropertyTest m where
     toProperty :: m Property -> Property
@@ -22,4 +22,8 @@ idFromUserResponse resp = fromJust $ (M.id :: M.User -> Int) <$> decode (simpleB
 idFromTrxResponse :: SResponse -> Int
 idFromTrxResponse resp = fromJust $ (M.id :: M.Transaction -> Int) <$> decode (simpleBody resp)
 
---decode :: FromJSON a => LB.ByteString -> Maybe a
+withId :: User -> Int -> User
+withId user userId = M.User userId (M.name user) (M.lastName user) ((M.amount :: M.User -> Double) user)
+
+strictEncode :: ToJSON a => a -> ByteString
+strictEncode a = toStrict $ encode a

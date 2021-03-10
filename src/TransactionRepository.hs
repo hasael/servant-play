@@ -5,7 +5,6 @@ module TransactionRepository where
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromField (FromField, fromField)
 import Database.PostgreSQL.Simple.FromRow ()
-import GHC.Int ( Int64 )
 import Models ( Transaction, TransactionType(..) ) 
 
 instance FromField TransactionType where
