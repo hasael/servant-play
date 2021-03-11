@@ -21,6 +21,7 @@
 module Lib
     ( startApp
     , app
+    , scheduledJob
     ) where
 
 
@@ -37,6 +38,17 @@ import Models
 import UserService
 import TransactionService
 import DbRepository
+import GCounter
+import Control.Monad
+import Data.Map
+
+scheduledJob :: (DbRepository IO a, GCounter Transaction Int) => a -> IO ()
+scheduledJob conn = do 
+              result <- merge
+              updateTrxData conn result
+
+updateTrxData :: DbRepository IO a => a -> Map Int Transaction -> IO ()
+updateTrxData conn map = void $ sequence_ $ fmap (\t -> updateUserAmount conn (userId t) (calculatedtransactionAmount t)) $ elems map
 
 type UserAPI = "users" :>
     (                              Get  '[JSON] [User]
@@ -53,16 +65,16 @@ type TransactionsAPI = "trx" :>
 
 type API = UserAPI :<|> TransactionsAPI
 
-startApp :: DbRepository IO a =>  a-> IO ()
+startApp :: (GCounter Transaction Int , DbRepository IO a)  =>  a-> IO ()
 startApp connectionsPool = run 8080 $ (logStdoutDev . app) connectionsPool
 
-app ::  DbRepository IO a => a -> Application
+app ::  (GCounter Transaction Int , DbRepository IO a)  => a -> Application
 app connectionsPool = serve api $ server connectionsPool
 
 api :: Proxy API
 api = Proxy
 
-server :: DbRepository IO a =>  a -> Server API
+server :: (GCounter Transaction Int , DbRepository IO a) =>  a -> Server API
 server connectionsPool = (fetchUsers connectionsPool
                          :<|>  fetchUser connectionsPool
                          :<|>  insertUser2 connectionsPool)
@@ -93,21 +105,21 @@ insertUser2 conn user = do
       Just u -> return u
       Nothing -> throwError err404 
 
-insertCreditTransaction2 :: DbRepository IO a => a  -> Int -> Double -> Handler Transaction
+insertCreditTransaction2 :: (GCounter Transaction Int , DbRepository IO a) => a  -> Int -> Double -> Handler Transaction
 insertCreditTransaction2 conn userId amount = do 
                            result <- liftIO $ createCreditTransaction conn userId amount
                            case result of
                              CreditUserNotFound -> throwError err404
-                             CorrectCredit t -> return t
+                             CorrectCredit t -> liftIO $ increment userId t >> return t  
                          
 
-insertDebitTransaction2 :: DbRepository IO a => a  -> Int -> Double -> Handler Transaction
+insertDebitTransaction2 :: (GCounter Transaction Int , DbRepository IO a) =>  a  -> Int -> Double -> Handler Transaction
 insertDebitTransaction2  conn userId amount =  do 
                            result <- liftIO $ createDebitTransaction conn userId amount
                            case result of
                              DebitUserNotFound  -> throwError err404
                              IncorrectAmount -> throwError err403
-                             CorrectDebit t -> return t
+                             CorrectDebit t -> liftIO $ increment userId t >> return t  
                             
 fetchTransactions :: DbRepository IO a => a  -> Int -> Handler [Transaction]
 fetchTransactions conn userId =  do

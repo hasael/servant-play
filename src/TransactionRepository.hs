@@ -23,6 +23,9 @@ getTransactionById transactionId conn = do
 getTransactions ::  Int -> Connection -> IO [Transaction]
 getTransactions userId conn = query conn "SELECT id, user_id, amount, transaction_type  from transactions where user_id = ?" (Only userId) 
 
+getAllTransactions :: Connection -> IO [Transaction]
+getAllTransactions conn = query conn "SELECT id, user_id, amount, transaction_type  from transactions" () 
+
 insertCreditTransaction ::  Int -> Double -> Connection -> IO (Maybe Transaction) 
 insertCreditTransaction userId amount conn = do
     rows <- query conn "INSERT INTO transactions(id, user_id, amount, transaction_type) VALUES (default,?,?,'Credit') RETURNING *" (userId, amount) 

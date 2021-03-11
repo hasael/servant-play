@@ -1,13 +1,15 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-
 module Models where
 import GHC.Generics
 import GHC.Base ( Eq, Double, Int, String )
 import GHC.Show ( Show )
 import Data.Aeson ( ToJSON, FromJSON )
-
+import Data.Semigroup 
+import Data.Monoid
+import Prelude ( (+), (<))
+import GCounter
 instance FromJSON Transaction
 instance FromJSON TransactionType
 instance FromJSON User
@@ -36,6 +38,10 @@ data Transaction = Transaction
 
 transactionAmount :: Transaction -> Double 
 transactionAmount = amount
+
+calculatedtransactionAmount :: Transaction -> Double 
+calculatedtransactionAmount (Transaction _ _ amount Credit) = amount
+calculatedtransactionAmount (Transaction _ _ amount Debit) = -amount
 
 userAmount :: User -> Double 
 userAmount = amount

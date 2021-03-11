@@ -21,6 +21,8 @@ class Monad m => DbRepository m a where
 
     getTransactions :: a -> Int -> m [Transaction]
 
+    getAllTransactions :: a -> m [Transaction]
+
     insertCreditTransaction :: a -> Int -> Double -> m (Maybe Transaction) 
 
     insertDebitTransaction :: a -> Int -> Double -> m (Maybe Transaction)

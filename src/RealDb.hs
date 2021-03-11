@@ -40,6 +40,8 @@ instance DbRepository IO (Pool Connection) where
 
     getTransactions pool userId = withResource pool $ T.getTransactions userId
 
+    getAllTransactions pool = withResource pool T.getAllTransactions 
+
     insertCreditTransaction pool userId amount = withResource pool $ T.insertCreditTransaction userId amount 
 
     insertDebitTransaction pool userId amount = withResource pool $ T.insertDebitTransaction userId amount  
