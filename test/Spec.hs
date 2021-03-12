@@ -36,7 +36,6 @@ import GHC.Int ( Int64 )
 import GHC.Float ( int2Double )
 import Control.Concurrent.Async ( concurrently_ )
 import Control.Monad
-import Instances
 import DbRepository
 
 main :: IO ()

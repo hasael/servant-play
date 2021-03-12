@@ -15,7 +15,7 @@ instance CanPropertyTest IO where
     toProperty = ioProperty 
 
 
-monadicPropIO :: (CanPropertyTest IO) => PropertyM IO () -> Property
+monadicPropIO :: PropertyM IO () -> Property
 monadicPropIO = monadic toProperty 
 
 initTestDbConnection = initConnection

@@ -29,17 +29,15 @@ library
       Lib,
       RealDb,
       DbRepository,
-      Models,
-      Instances,
-      GCounter
+      Models
   other-modules:
       Paths_servant_play,
       AppAPI,
       AppServer,
       Aligner,
-      TransactionRepository,
-      TransactionService,
-      UserRepository
+      TransactionService
+      Instances,
+      GCounter
   hs-source-dirs:
       src
   build-depends:
@@ -53,7 +51,6 @@ library
     , wai-extra
     , wai
     , warp
-    , mtl
     , stm
   default-language: Haskell2010
 
@@ -72,8 +69,6 @@ executable servant-play-exe
     , servant-play
     , servant-server
     , postgresql-simple
-    , bytestring
-    , resource-pool
     , yaml
     , wai
     , warp
