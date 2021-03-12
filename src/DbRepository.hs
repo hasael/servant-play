@@ -2,10 +2,9 @@
 
 module DbRepository where
 
-import Models
+import Models ( Transaction, User )
 
 class Monad m => DbRepository m a where 
-
 
     getUserAmount :: a -> Int -> m (Maybe Double)
 

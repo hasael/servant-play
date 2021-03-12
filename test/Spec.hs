@@ -1,9 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
-
+{-# LANGUAGE FlexibleContexts #-}
 module Main (main) where
 
-import Lib (app)
+import Lib (app, merge_)
 import Test.Hspec
 import Test.Hspec.Wai
     ( liftIO,
@@ -36,6 +36,8 @@ import GHC.Int ( Int64 )
 import GHC.Float ( int2Double )
 import Control.Concurrent.Async ( concurrently_ )
 import Control.Monad
+import Instances
+import DbRepository
 
 main :: IO ()
 main = do 
@@ -44,6 +46,7 @@ main = do
     let myapp = app pool
     hspec $ do
       spec myapp
+      concurrencySpecs pool myapp
       describe "Real DbRepository" $ do
           it "can create user" $ 
               property $ monadicPropIO . prop_insert_any_user pool                    
@@ -172,7 +175,9 @@ spec app = with (return app ) $ do
              let secondUserResp = decodeUser secondGetUserResponse
              liftIO $ userAmount firstUserResp `shouldBe` creditAmount
              liftIO $ userAmount secondUserResp `shouldBe` creditAmount - debitAmount
-
+             
+concurrencySpecs :: DbRepository IO a => a -> Application -> Spec
+concurrencySpecs conn app = with (return app ) $ do
     describe "GET /user/ amount on concurrent calls" $ do
         it "response contains correct debit transaction" $ do
              let userToCreate = User 1 "Isaac" "Newton" 0
@@ -180,12 +185,12 @@ spec app = with (return app ) $ do
              createUserResp <- postJson "/users" $ encode userToCreate
              let createdUserId = toByteString $ idFromUserResponse createUserResp
              app <- getApp 
-             let concurrency = 1
+             let concurrency = 10
              liftIO $ concurrentCallsN (simplePost ("/trx/credit/" <> createdUserId <> "/" <> toByteString creditAmount)) app concurrency
+             liftIO $ merge_ conn
              getUserResponse <- get ("/users/" <> createdUserId)
              let userResponse = decodeUser getUserResponse
              liftIO $ userAmount userResponse `shouldBe` creditAmount * int2Double concurrency
-             
 
 postJson :: B.ByteString -> LB.ByteString -> WaiSession st SResponse
 postJson path = request methodPost path [("Content-Type","application/json")] 

@@ -33,9 +33,3 @@ createCreditTransaction  conn userId amount =  do
                                              Just t -> updateUserAmount conn userId a >> return (CorrectCredit t)
                                              Nothing -> return CreditUserNotFound
                             Nothing -> return CreditUserNotFound
-
-getUserTransactions :: DbRepository m a => a  -> Int -> m [Transaction]
-getUserTransactions = getTransactions 
-
-getTransaction :: DbRepository m a => a  -> Int -> m (Maybe Transaction)
-getTransaction  =  getTransactionById

@@ -34,10 +34,12 @@ library
       GCounter
   other-modules:
       Paths_servant_play,
+      AppAPI,
+      AppServer,
+      Aligner,
       TransactionRepository,
       TransactionService,
-      UserRepository,
-      UserService
+      UserRepository
   hs-source-dirs:
       src
   build-depends:

@@ -1,128 +1,33 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleContexts           #-} 
+{-# LANGUAGE FlexibleContexts#-} 
 
 
--- This is an unfortunate hack.  Used to make the code slightly easier to
--- follow.  See below for how we could fix it.
-{-# LANGUAGE UndecidableInstances       #-}
-
--- This is another unfortunate hack to make the code simpler and easier to
--- understand.  Described at the end of this file.
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Lib
     ( startApp
     , app
-    , scheduledJob
+    , merge_
+    , startAligner
     ) where
 
 
-import Network.Wai
-import Network.Wai.Handler.Warp
-import Servant
-import Servant.Server
-import Database.PostgreSQL.Simple ( Connection )
-import Data.Pool
-import Control.Monad.IO.Class ( MonadIO(liftIO) )
-import GHC.Generics
-import Network.Wai.Middleware.RequestLogger
-import Models
-import UserService
-import TransactionService
-import DbRepository
-import GCounter
-import Control.Monad
-import Data.Map
+import Network.Wai ( Application )
+import Network.Wai.Handler.Warp ( run )
+import Network.Wai.Middleware.RequestLogger ( logStdoutDev )
+import DbRepository ( DbRepository )
 
-scheduledJob :: (DbRepository IO a, GCounter Transaction Int) => a -> IO ()
-scheduledJob conn = do 
-              result <- merge
-              updateTrxData conn result
+import qualified Aligner as A
+import qualified AppServer as S 
 
-updateTrxData :: DbRepository IO a => a -> Map Int Transaction -> IO ()
-updateTrxData conn map = void $ sequence_ $ fmap (\t -> updateUserAmount conn (userId t) (calculatedtransactionAmount t)) $ elems map
+merge_ :: (DbRepository IO a) => a -> IO ()
+merge_ = A.merge_
 
-type UserAPI = "users" :>
-    (                              Get  '[JSON] [User]
-     :<|> Capture "id" Int      :> Get  '[JSON] User
-     :<|> ReqBody '[JSON] User  :> Post '[JSON] User 
-    )
+startAligner :: (DbRepository IO a)  => a -> IO ()
+startAligner = A.start_
 
-type TransactionsAPI = "trx" :>
-    (
-      Capture "userId" Int   :>    Get  '[JSON] [Transaction]
-    :<|>  "credit" :> Capture "userId" Int   :> Capture "amount" Double   :>    Post  '[JSON] Transaction
-    :<|>  "debit" :> Capture "userId" Int   :> Capture "amount" Double   :>    Post  '[JSON] Transaction
-    )
+startApp :: Int -> Application -> IO ()
+startApp port app = run port $ logStdoutDev app
 
-type API = UserAPI :<|> TransactionsAPI
-
-startApp :: (GCounter Transaction Int , DbRepository IO a)  =>  a-> IO ()
-startApp connectionsPool = run 8080 $ (logStdoutDev . app) connectionsPool
-
-app ::  (GCounter Transaction Int , DbRepository IO a)  => a -> Application
-app connectionsPool = serve api $ server connectionsPool
-
-api :: Proxy API
-api = Proxy
-
-server :: (GCounter Transaction Int , DbRepository IO a) =>  a -> Server API
-server connectionsPool = (fetchUsers connectionsPool
-                         :<|>  fetchUser connectionsPool
-                         :<|>  insertUser2 connectionsPool)
-                         :<|>  (
-                            fetchTransactions connectionsPool
-                         :<|>  insertCreditTransaction2 connectionsPool
-                         :<|>  insertDebitTransaction2 connectionsPool
-                         )
-
-fetchUsers :: DbRepository IO a =>  a -> Handler [User]
-fetchUsers conn = liftIO $ getUsers conn 
-
-notFoundResponse :: Maybe a -> Handler a
-notFoundResponse Nothing = throwError err404
-notFoundResponse (Just r) = return r
-
-
-fetchUser ::  DbRepository IO a => a -> Int -> Handler User
-fetchUser conn userId = liftIO ( getUser conn userId )>>= notFoundResponse
-
-fetchTransaction :: DbRepository IO a => a  -> Int -> Handler Transaction
-fetchTransaction conn transactionId = liftIO (getTransaction conn transactionId) >>= notFoundResponse
-
-insertUser2 :: DbRepository IO a =>  a -> User -> Handler User
-insertUser2 conn user = do
-    mu <- liftIO $ createUser conn user
-    case mu of 
-      Just u -> return u
-      Nothing -> throwError err404 
-
-insertCreditTransaction2 :: (GCounter Transaction Int , DbRepository IO a) => a  -> Int -> Double -> Handler Transaction
-insertCreditTransaction2 conn userId amount = do 
-                           result <- liftIO $ createCreditTransaction conn userId amount
-                           case result of
-                             CreditUserNotFound -> throwError err404
-                             CorrectCredit t -> liftIO $ increment userId t >> return t  
-                         
-
-insertDebitTransaction2 :: (GCounter Transaction Int , DbRepository IO a) =>  a  -> Int -> Double -> Handler Transaction
-insertDebitTransaction2  conn userId amount =  do 
-                           result <- liftIO $ createDebitTransaction conn userId amount
-                           case result of
-                             DebitUserNotFound  -> throwError err404
-                             IncorrectAmount -> throwError err403
-                             CorrectDebit t -> liftIO $ increment userId t >> return t  
-                            
-fetchTransactions :: DbRepository IO a => a  -> Int -> Handler [Transaction]
-fetchTransactions conn userId =  do
-                          users <- liftIO $ getUserTransactions conn userId
-                          case users of [] -> throwError err404
-                                        a -> return a
+app ::  (DbRepository IO a)  => a -> Application
+app  = S.app

@@ -32,6 +32,8 @@ instance DbRepository Identity () where
 
     getTransactionById pool trxId = return Nothing
 
+    getAllTransactions pool = return []
+
     getTransactions pool userId = return [] 
 
     insertCreditTransaction pool userId amount = return Nothing

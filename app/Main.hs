@@ -9,34 +9,20 @@ import Data.Yaml
 import RealDb
 import Control.Concurrent.Async
 import Control.Concurrent
-
-import Instances
 import DbRepository
-import Models
-import GCounter
-
---main :: IO ()
---main = concurrently_ server scheduled
 
 main :: IO ()
 main = do 
      config <- readConfig
      print config
      connectionsPool <- initConnection $ (connectionString . db) config
-     startCrdt connectionsPool
+     startAligner connectionsPool
      initDb connectionsPool
-     concurrently_ (startApp connectionsPool) (scheduled connectionsPool)
+     concurrently_ (startApp 8080 $ app connectionsPool ) (scheduled connectionsPool 3000000)
      
+scheduled :: (DbRepository IO a)  => a -> Int -> IO ()
+scheduled conn delay = threadDelay delay >> merge_ conn >> scheduled conn delay
 
 readConfig :: IO AppConfig
 readConfig = decodeFileThrow "./local-config.yaml" 
-
-scheduled :: (DbRepository IO a, GCounter Transaction Int)  => a -> IO ()
-scheduled conn = threadDelay 3000000 >> scheduledJob conn >> scheduled conn
-
-startCrdt :: (DbRepository IO a, GCounter Transaction Int)  => a -> IO ()
-startCrdt conn = do
-     trxs <- getAllTransactions conn
-     sequence $ fmap (\t -> increment (userId t) t ) trxs
-     return ()
 
