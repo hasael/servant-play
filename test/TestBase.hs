@@ -7,7 +7,7 @@ import Data.Aeson
 import Network.Wai.Test
 import Data.ByteString.Char8 as B (pack, unpack , ByteString)
 import Data.ByteString.Lazy as L (toStrict, ByteString) 
-import Models as M
+import Models 
 import Data.Maybe ( fromJust )
 
 class (Monad m) => CanPropertyTest m where
@@ -16,21 +16,20 @@ class (Monad m) => CanPropertyTest m where
 monadicProp :: (CanPropertyTest m) => PropertyM m () -> Property
 monadicProp = monadic toProperty 
 
-idFromUserResponse :: SResponse -> Int
-idFromUserResponse resp = fromJust $ (M.id :: M.User -> Int) <$> decode (simpleBody resp)
+idFromUserResponse :: SResponse -> UserId
+idFromUserResponse resp = fromJust $ getUserId <$> decode (simpleBody resp)
 
-idFromTrxResponse :: SResponse -> Int
-idFromTrxResponse resp = fromJust $ (M.id :: M.Transaction -> Int) <$> decode (simpleBody resp)
+idFromTrxResponse :: SResponse -> TransactionId
+idFromTrxResponse resp = fromJust $ getTransactionId <$> decode (simpleBody resp)
 
-decodeTransaction :: SResponse -> M.Transaction 
+decodeTransaction :: SResponse -> Transaction 
 decodeTransaction resp = fromJust $ decode (simpleBody resp)
 
-
-decodeUser:: SResponse -> M.User 
+decodeUser:: SResponse -> User 
 decodeUser resp = fromJust $ decode (simpleBody resp)
 
-withId :: User -> Int -> User
-withId user userId = M.User userId (M.name user) (M.lastName user) ((M.amount :: M.User -> Double) user)
+withId :: User -> UserId -> User
+withId user userId = User userId (name user) (lastName user) ((amount :: User -> Double) user)
 
 strictEncode :: ToJSON a => a -> B.ByteString
 strictEncode a = toStrict $ encode a

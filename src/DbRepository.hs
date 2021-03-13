@@ -2,28 +2,28 @@
 
 module DbRepository where
 
-import Models ( Transaction, User )
+import Models ( Transaction, User, UserId, TransactionId, Amount )
 
 class Monad m => DbRepository m a where 
 
-    getUserAmount :: a -> Int -> m (Maybe Double)
+    getUserAmount :: a -> UserId  -> m (Maybe Double)
 
-    updateUserAmount :: a -> Int -> Double -> m ()
+    updateUserAmount :: a -> UserId -> Double -> m ()
 
     getAllUsers :: a -> m [User]
 
-    getUserById :: a -> Int -> m (Maybe User)
+    getUserById :: a -> UserId -> m (Maybe User)
 
     insertUser :: a -> User -> m (Maybe User)
 
-    getTransactionById :: a -> Int -> m (Maybe Transaction)
+    getTransactionById :: a -> TransactionId -> m (Maybe Transaction)
 
-    getTransactions :: a -> Int -> m [Transaction]
+    getTransactions :: a -> UserId -> m [Transaction]
 
     getAllTransactions :: a -> m [Transaction]
 
-    insertCreditTransaction :: a -> Int -> Double -> m (Maybe Transaction) 
+    insertCreditTransaction :: a -> UserId -> Amount  -> m (Maybe Transaction) 
 
-    insertDebitTransaction :: a -> Int -> Double -> m (Maybe Transaction)
+    insertDebitTransaction :: a -> UserId -> Amount  -> m (Maybe Transaction)
 
 

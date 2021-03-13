@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE GeneralisedNewtypeDeriving     #-}
 
 module RealDb where
 
@@ -24,7 +25,7 @@ initConnection connStr = createPool (connectPostgreSQL $ pack connStr)
                                     2 -- stripes
                                     60 --seconds to keep alive if unused
                                     10 --max 20 connection per stripe
-
+ 
 instance FromRow User
 
 instance FromField TransactionType where

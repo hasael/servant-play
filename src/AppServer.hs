@@ -43,7 +43,7 @@ fetchUsers :: DbRepository IO a =>  a -> Handler [User]
 fetchUsers conn = liftIO $ getAllUsers conn 
 
 
-fetchUser ::  DbRepository IO a => a -> Int -> Handler User
+fetchUser ::  DbRepository IO a => a -> UserId -> Handler User
 fetchUser conn userId = liftIO ( getUserById conn userId ) >>= notFoundResponse
 
 createUser :: DbRepository IO a =>  a -> User -> Handler User
@@ -53,20 +53,20 @@ createUser conn user = do
       Just u -> return u
       Nothing -> throwError err404 
 
-fetchTransactions :: DbRepository IO a => a  -> Int -> Handler [Transaction]
+fetchTransactions :: DbRepository IO a => a  -> UserId -> Handler [Transaction]
 fetchTransactions conn userId =  do
                           users <- liftIO $ getTransactions conn userId
                           case users of [] -> throwError err404
                                         a -> return a
 
-addCreditTransaction :: (DbRepository IO a) => a  -> Int -> Double -> Handler Transaction
+addCreditTransaction :: (DbRepository IO a) => a  -> UserId -> Double -> Handler Transaction
 addCreditTransaction conn userId amount = do 
                            result <- liftIO $ createCreditTransaction conn userId amount
                            case result of
                              CreditUserNotFound -> throwError err404
                              CorrectCredit t ->   liftIO $ forkIO (void (increment userId t))>> return t
                          
-addDebitTransaction :: (DbRepository IO a) =>  a  -> Int -> Double -> Handler Transaction
+addDebitTransaction :: (DbRepository IO a) =>  a  -> UserId -> Double -> Handler Transaction
 addDebitTransaction  conn userId amount =  do 
                            result <- liftIO $ createDebitTransaction conn userId amount
                            case result of

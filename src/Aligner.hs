@@ -7,7 +7,7 @@ module Aligner
 )
  where
 
-import Models ( Transaction(userId), calculatedtransactionAmount )
+import Models ( Transaction(userId), calculatedtransactionAmount, UserId )
 import DbRepository
     ( DbRepository(updateUserAmount, getAllTransactions) )
 import GCounter
@@ -29,5 +29,5 @@ start_ conn = do
      return ()
 
 
-updateTrxData :: DbRepository IO a => a -> Map Int Transaction -> IO ()
+updateTrxData :: DbRepository IO a => a -> Map UserId Transaction -> IO ()
 updateTrxData conn map = void $ sequence_ $ fmap (\t -> updateUserAmount conn (userId t) (calculatedtransactionAmount t)) $ elems map
