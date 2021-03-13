@@ -7,17 +7,19 @@ module Aligner
 )
  where
 
-import Models
+import Models ( Transaction(userId), calculatedtransactionAmount )
 import DbRepository
+    ( DbRepository(updateUserAmount, getAllTransactions) )
 import GCounter
-import Control.Monad
-import Data.Map
+import Control.Monad ( void )
+import Data.Map ( elems, Map )
 
 import Instances
 
 merge_ :: (DbRepository IO a) => a -> IO ()
 merge_ conn = do 
               result <- merge
+              print result
               updateTrxData conn result
 
 start_ :: (DbRepository IO a)  => a -> IO ()

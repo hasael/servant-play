@@ -9,9 +9,9 @@ import Data.Maybe
 import Data.Monoid
 import Data.Ord
 import Control.Monad 
-import Prelude as P (Int, foldr, fromInteger, (+), putStrLn, (.), ($), IO, show) 
+import Prelude as P (Int, foldr, fromInteger, (+), putStrLn, print, (.), ($), IO, show, Show) 
 
-class (Monoid m, Ord a) => GCounter m a where
+class (Monoid m, Ord a, Show a, Show m) => GCounter m a where
 
     totals :: TVar (Map a m) 
     totals = unsafePerformIO $ newTVarIO empty 

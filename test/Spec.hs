@@ -37,6 +37,7 @@ import GHC.Float ( int2Double )
 import Control.Concurrent.Async ( concurrently_ )
 import Control.Monad
 import DbRepository
+import GHC.Conc.IO
 
 main :: IO ()
 main = do 
@@ -186,6 +187,7 @@ concurrencySpecs conn app = with (return app ) $ do
              app <- getApp 
              let concurrency = 10
              liftIO $ concurrentCallsN (simplePost ("/trx/credit/" <> createdUserId <> "/" <> toByteString creditAmount)) app concurrency
+             liftIO $ threadDelay 100000
              liftIO $ merge_ conn
              getUserResponse <- get ("/users/" <> createdUserId)
              let userResponse = decodeUser getUserResponse

@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts#-} 
+{-# LANGUAGE BangPatterns#-} 
 
 module AppServer 
 (
@@ -15,6 +16,8 @@ import DbRepository
 import GCounter
 import AppAPI
 import Instances
+import Control.Concurrent
+import Control.Monad ( void )
 
 api :: Proxy API
 api = Proxy
@@ -61,16 +64,15 @@ addCreditTransaction conn userId amount = do
                            result <- liftIO $ createCreditTransaction conn userId amount
                            case result of
                              CreditUserNotFound -> throwError err404
-                             CorrectCredit t -> liftIO $ increment userId t >> return t  
+                             CorrectCredit t ->   liftIO $ forkIO (void (increment userId t))>> return t
                          
-
 addDebitTransaction :: (DbRepository IO a) =>  a  -> Int -> Double -> Handler Transaction
 addDebitTransaction  conn userId amount =  do 
                            result <- liftIO $ createDebitTransaction conn userId amount
                            case result of
                              DebitUserNotFound  -> throwError err404
                              IncorrectAmount -> throwError err403
-                             CorrectDebit t -> liftIO $ increment userId t >> return t  
+                             CorrectDebit t ->   liftIO $ forkIO (void (increment userId t))>> return t
 
 notFoundResponse :: Maybe a -> Handler a
 notFoundResponse Nothing = throwError err404
