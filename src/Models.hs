@@ -2,6 +2,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Models where
 import GHC.Generics
@@ -28,18 +29,18 @@ type Amount = Double
 
 data User = User
   { 
-    id       :: UserId,
-    name     :: String,
-    lastName :: String,
-    amount   :: Amount
+    id       :: !UserId,
+    name     :: !String,
+    lastName :: !String,
+    amount   :: !Amount
   } deriving (Eq, Show, Generic)
 
 data Transaction = Transaction
   { 
-    id      :: TransactionId,
-    userId   :: UserId,
-    amount   :: Amount,
-    transactionType :: TransactionType
+    id      :: !TransactionId,
+    userId   :: !UserId,
+    amount   :: !Amount,
+    transactionType :: !TransactionType
   } deriving (Eq, Show, Generic)
 
 transactionAmount :: Transaction -> Amount 

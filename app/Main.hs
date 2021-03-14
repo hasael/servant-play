@@ -14,7 +14,6 @@ import DbRepository
 main :: IO ()
 main = do 
      config <- readConfig
-     print config
      connectionsPool <- initConnection $ (connectionString . db) config
      startAligner connectionsPool
      initDb connectionsPool

@@ -21,7 +21,9 @@ import Generic.Random ( genericArbitraryU )
 prop_reverse :: [Int] -> Bool
 prop_reverse xs = reverse (reverse xs) == xs
 
-instance Arbitrary UserId
+instance Arbitrary UserId where
+  arbitrary = genericArbitraryU
+  shrink = genericShrink
 
 instance Arbitrary User where
   arbitrary = genericArbitraryU
