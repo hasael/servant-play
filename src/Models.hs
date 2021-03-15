@@ -1,56 +1,67 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Models where
-import GHC.Generics
-import GHC.Base ( Eq, Double, Int, String , Ord)
-import GHC.Show ( Show )
-import Data.Aeson ( ToJSON, FromJSON )
-import Prelude ( (+), (<))
-import Database.PostgreSQL.Simple.FromField ( FromField )
+
+import Data.Aeson (FromJSON, ToJSON)
+import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple.ToField
+import GHC.Base (Double, Eq, Int, Ord, String)
+import GHC.Generics
+import GHC.Show (Show)
 import Servant
+import Prelude ((+), (<))
 
 instance FromJSON Transaction
-instance FromJSON TransactionType
-instance FromJSON User
-instance ToJSON User
-instance ToJSON Transaction
-instance ToJSON TransactionType
-data TransactionType = Debit | Credit
-      deriving (Eq, Show, Generic)
 
-newtype UserId = UserId { u_value :: Int } deriving (Eq, Ord, Show, Generic, ToJSON, FromJSON, FromField, ToField, FromHttpApiData)
-newtype TransactionId = TransactionId { t_value :: Int} deriving (Eq, Ord, Show, ToJSON, FromJSON, FromField, ToField, FromHttpApiData)
-type Amount = Double 
+instance FromJSON TransactionType
+
+instance FromJSON User
+
+instance ToJSON User
+
+instance ToJSON Transaction
+
+instance ToJSON TransactionType
+
+data TransactionType = Debit | Credit
+  deriving (Eq, Show, Generic)
+
+newtype UserId = UserId {u_value :: Int}
+  deriving (Eq, Ord, Show, Generic, ToJSON, FromJSON, FromField, ToField, FromHttpApiData)
+
+newtype TransactionId = TransactionId {t_value :: Int}
+  deriving (Eq, Ord, Show, ToJSON, FromJSON, FromField, ToField, FromHttpApiData)
+
+type Amount = Double
 
 data User = User
-  { 
-    id       :: !UserId,
-    name     :: !String,
+  { id :: !UserId,
+    name :: !String,
     lastName :: !String,
-    amount   :: !Amount
-  } deriving (Eq, Show, Generic)
+    amount :: !Amount
+  }
+  deriving (Eq, Show, Generic)
 
 data Transaction = Transaction
-  { 
-    id      :: !TransactionId,
-    userId   :: !UserId,
-    amount   :: !Amount,
+  { id :: !TransactionId,
+    userId :: !UserId,
+    amount :: !Amount,
     transactionType :: !TransactionType
-  } deriving (Eq, Show, Generic)
+  }
+  deriving (Eq, Show, Generic)
 
-transactionAmount :: Transaction -> Amount 
+transactionAmount :: Transaction -> Amount
 transactionAmount = amount
 
-calculatedtransactionAmount :: Transaction -> Amount 
+calculatedtransactionAmount :: Transaction -> Amount
 calculatedtransactionAmount (Transaction _ _ amount Credit) = amount
-calculatedtransactionAmount (Transaction _ _ amount Debit) = -amount
+calculatedtransactionAmount (Transaction _ _ amount Debit) = - amount
 
-userAmount :: User -> Amount 
+userAmount :: User -> Amount
 userAmount = amount
 
 getUserId :: User -> UserId

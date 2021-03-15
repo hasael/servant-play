@@ -1,29 +1,26 @@
-{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module DbRepository where
 
-import Models ( Transaction, User, UserId, TransactionId, Amount )
+import Models (Amount, Transaction, TransactionId, User, UserId)
 
-class Monad m => DbRepository m a where 
+class Monad m => DbRepository m a where
+  getUserAmount :: a -> UserId -> m (Maybe Double)
 
-    getUserAmount :: a -> UserId  -> m (Maybe Double)
+  updateUserAmount :: a -> UserId -> Double -> m ()
 
-    updateUserAmount :: a -> UserId -> Double -> m ()
+  getAllUsers :: a -> m [User]
 
-    getAllUsers :: a -> m [User]
+  getUserById :: a -> UserId -> m (Maybe User)
 
-    getUserById :: a -> UserId -> m (Maybe User)
+  insertUser :: a -> User -> m (Maybe User)
 
-    insertUser :: a -> User -> m (Maybe User)
+  getTransactionById :: a -> TransactionId -> m (Maybe Transaction)
 
-    getTransactionById :: a -> TransactionId -> m (Maybe Transaction)
+  getTransactions :: a -> UserId -> m [Transaction]
 
-    getTransactions :: a -> UserId -> m [Transaction]
+  getAllTransactions :: a -> m [Transaction]
 
-    getAllTransactions :: a -> m [Transaction]
+  insertCreditTransaction :: a -> UserId -> Amount -> m (Maybe Transaction)
 
-    insertCreditTransaction :: a -> UserId -> Amount  -> m (Maybe Transaction) 
-
-    insertDebitTransaction :: a -> UserId -> Amount  -> m (Maybe Transaction)
-
-
+  insertDebitTransaction :: a -> UserId -> Amount -> m (Maybe Transaction)
