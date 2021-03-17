@@ -43,6 +43,7 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , Decimal
     , containers
     , servant-server
     , postgresql-simple
@@ -81,7 +82,7 @@ test-suite servant-play-test
       Paths_servant_play,
       RealTestDb,
       MockedDb,
-      Properties,
+      DBProperties,
       TestBase
   hs-source-dirs:
       test

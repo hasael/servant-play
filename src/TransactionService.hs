@@ -9,7 +9,7 @@ data DebitOpResult = CorrectDebit Transaction | DebitUserNotFound | IncorrectAmo
 
 data CreditOpResult = CorrectCredit Transaction | CreditUserNotFound
 
-createDebitTransaction :: DbRepository m a => a -> UserId -> Double -> m DebitOpResult
+createDebitTransaction :: DbRepository m a => a -> UserId -> Amount  -> m DebitOpResult
 createDebitTransaction conn userId amount = do
   curramount <- getUserAmount conn userId
   let newAmount = (\a -> a - amount) <$> curramount
@@ -24,7 +24,7 @@ createDebitTransaction conn userId amount = do
         else return IncorrectAmount
     Nothing -> return DebitUserNotFound
 
-createCreditTransaction :: DbRepository m a => a -> UserId -> Double -> m CreditOpResult
+createCreditTransaction :: DbRepository m a => a -> UserId -> Amount  -> m CreditOpResult
 createCreditTransaction conn userId amount = do
   curramount <- getUserAmount conn userId
   let newAmount = (+ amount) <$> curramount

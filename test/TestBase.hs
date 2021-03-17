@@ -31,7 +31,7 @@ decodeUser :: SResponse -> User
 decodeUser resp = fromJust $ decode (simpleBody resp)
 
 withId :: User -> UserId -> User
-withId user userId = User userId (name user) (lastName user) ((amount :: User -> Double) user)
+withId user userId = User userId (name user) (lastName user) ((amount :: User -> Amount) user)
 
 strictEncode :: ToJSON a => a -> B.ByteString
 strictEncode a = toStrict $ encode a

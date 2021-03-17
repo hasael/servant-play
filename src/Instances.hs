@@ -1,17 +1,21 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Instances where
 
 import GCounter
 import Models
+import Data.Ratio
+import Data.Decimal
 
-instance Semigroup Transaction where
-  a <> b = Transaction (TransactionId 0) (userId a) finalAmount trxType
+instance Semigroup TransactionAmount where
+  a <> b = TransactionAmount finalAmount trxType
     where
-      finalAmount = calculatedtransactionAmount a + calculatedtransactionAmount b
-      trxType = if finalAmount < 0 then Debit else Credit
+      calcAmount = fromRational $ toRational ( getTransactionAmount a + getTransactionAmount b) 
+      finalAmount = abs calcAmount
+      trxType = if calcAmount < 0 then Debit else Credit
 
-instance Monoid Transaction where
-  mempty = Transaction (TransactionId 0) (UserId 0) 0 Credit
+instance Monoid TransactionAmount where
+  mempty = TransactionAmount 0.0 Credit
 
-instance GCounter Transaction UserId
+instance GCounter TransactionAmount UserId

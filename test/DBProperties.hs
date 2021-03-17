@@ -1,22 +1,13 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators #-}
-
-module Properties where
+ {-# LANGUAGE DeriveGeneric #-}
+module DBProperties where
 
 import Data.Maybe (isJust)
 import DbRepository
-import Generic.Random (genericArbitraryU)
+import Generic.Random 
 import Models
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
+import GHC.Generics
 
 prop_reverse :: [Int] -> Bool
 prop_reverse xs = reverse (reverse xs) == xs
@@ -26,6 +17,22 @@ instance Arbitrary UserId where
   shrink = genericShrink
 
 instance Arbitrary User where
+  arbitrary = genericArbitraryU
+  shrink = genericShrink
+
+instance Arbitrary TransactionAmount where
+  arbitrary = genericArbitraryU
+  shrink = genericShrink
+
+instance Arbitrary Transaction where
+  arbitrary = genericArbitraryU
+  shrink = genericShrink
+
+instance Arbitrary TransactionId where
+  arbitrary = genericArbitraryU
+  shrink = genericShrink
+
+instance Arbitrary TransactionType where
   arbitrary = genericArbitraryU
   shrink = genericShrink
 

@@ -13,14 +13,14 @@ import Data.ByteString.Lazy (toStrict)
 import qualified Data.ByteString.Lazy as LB (ByteString)
 import DbRepository
 import GHC.Conc.IO
-import GHC.Float (int2Double)
+import GHC.Float 
 import GHC.Int (Int64)
 import Lib (app, merge_)
 import Models
 import Network.HTTP.Types
 import Network.Wai
 import Network.Wai.Test (SResponse (simpleBody, simpleStatus), assertStatus)
-import Properties
+import DBProperties
 import RealTestDb
 import Test.Hspec
 import Test.Hspec.Wai
@@ -42,6 +42,7 @@ import Test.Hspec.Wai.Internal
   )
 import Test.QuickCheck
 import TestBase
+import MonoidProperties
 
 main :: IO ()
 main = do
@@ -56,6 +57,13 @@ main = do
         property $ monadicPropIO . prop_insert_any_user pool
       it "creates and reads a user" $
         property $ monadicPropIO . prop_get_insert_user pool
+    describe "TransactionAmount is a monoid" $ do
+      it "Associative" $
+        quickCheck $ withMaxSuccess 1000 (prop_MonoidAssociativity :: TransactionAmount  -> TransactionAmount  -> TransactionAmount -> Bool)
+      it "Right identity" $
+        quickCheck $ property (prop_MonoidRightIdentity :: TransactionAmount -> Bool)
+      it "Left identity" $
+        quickCheck $ property (prop_MonoidLeftIdentity :: TransactionAmount -> Bool)
 
 spec :: Application -> Spec
 spec app = with (return app) $ do
@@ -98,7 +106,7 @@ spec app = with (return app) $ do
   describe "POST /trx/credit/" $ do
     it "response contains credit transaction" $ do
       let userToCreate = User (UserId 1) "Isaac" "Newton" 0
-      let myAmount = 10 :: Double
+      let myAmount = 10 :: Amount
       resp <- postJson "/users" $ encode userToCreate
       let createdUserId = idFromUserResponse resp
       let createdUserIdStr = toByteString $ u_value createdUserId
@@ -182,17 +190,18 @@ concurrencySpecs conn app = with (return app) $ do
   describe "GET /user/ amount on concurrent calls" $ do
     it "response contains correct debit transaction" $ do
       let userToCreate = User (UserId 1) "Isaac" "Newton" 0
-      let creditAmount = 10
+      let creditAmount = 10 :: Amount
       createUserResp <- postJson "/users" $ encode userToCreate
       let createdUserId = toByteString $ u_value $ idFromUserResponse createUserResp
       app <- getApp
       let concurrency = 10
+      let expectedAmount = (int2Double concurrency) * creditAmount
       liftIO $ concurrentCallsN (simplePost ("/trx/credit/" <> createdUserId <> "/" <> toByteString creditAmount)) app concurrency
       liftIO $ threadDelay 100000
       liftIO $ merge_ conn
       getUserResponse <- get ("/users/" <> createdUserId)
       let userResponse = decodeUser getUserResponse
-      liftIO $ userAmount userResponse `shouldBe` creditAmount * int2Double concurrency
+      liftIO $ userAmount userResponse `shouldBe` expectedAmount
 
 postJson :: B.ByteString -> LB.ByteString -> WaiSession st SResponse
 postJson path = request methodPost path [("Content-Type", "application/json")]
