@@ -15,8 +15,8 @@ main :: IO ()
 main = do
   config <- readConfig
   connectionsPool <- initConnection $ (connectionString . db) config
-  startAligner connectionsPool
   initDb connectionsPool
+  startAligner connectionsPool
   concurrently_ (startApp 8080 $ app connectionsPool) (scheduled connectionsPool 3000000)
 
 scheduled :: (DbRepository IO a) => a -> Int -> IO ()

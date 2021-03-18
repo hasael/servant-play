@@ -5,7 +5,7 @@ import Data.Monoid
 import Test.QuickCheck
 
 prop_MonoidLeftIdentity :: (Monoid a ,Eq a) => a -> Bool 
-prop_MonoidLeftIdentity x = mempty <> x == x
+prop_MonoidLeftIdentity x = x <> mempty == x
 
 prop_MonoidRightIdentity :: (Monoid a ,Eq a) => a -> Bool 
 prop_MonoidRightIdentity x = x == mempty <> x

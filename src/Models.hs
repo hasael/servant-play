@@ -3,22 +3,19 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE StandaloneDeriving #-}
+
 module Models where
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Decimal
 import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple.ToField
-import GHC.Base (Double, Int, Ord, String, Eq)
+import GHC.Base (Double, Eq, Int, Ord, String)
+import GHC.Float.ConversionUtils
 import GHC.Generics
 import GHC.Show (Show)
-import GHC.Float.ConversionUtils
 import Servant
-import Prelude ((+), (<) , (>), Float, Fractional, realToFrac, Real (toRational), Integral, (==), (&&))
-import Data.Decimal
-
+import Prelude (Float, Fractional, Integral, Real (toRational), realToFrac, (&&), (+), (<), (==), (>))
 
 instance FromJSON Transaction
 
@@ -32,8 +29,6 @@ instance ToJSON Transaction
 
 instance ToJSON TransactionType
 
- 
-
 data TransactionType = Debit | Credit
   deriving (Eq, Show, Generic)
 
@@ -43,7 +38,7 @@ newtype UserId = UserId {u_value :: Int}
 newtype TransactionId = TransactionId {t_value :: Int}
   deriving (Eq, Ord, Show, Generic, ToJSON, FromJSON, FromField, ToField, FromHttpApiData)
 
-type Amount = Double   
+type Amount = Double
 
 data User = User
   { id :: !UserId,
@@ -59,17 +54,10 @@ data Transaction = Transaction
     amount :: !Amount,
     transactionType :: !TransactionType
   }
-  deriving ( Show, Generic)
-
-transactionAmount :: Transaction -> Amount
-transactionAmount = amount
+  deriving (Show, Generic)
 
 trxAmount :: Transaction -> TransactionAmount
 trxAmount (Transaction _ _ amount trxType) = TransactionAmount amount trxType
-
-calculatedtransactionAmount :: Integral i => Transaction -> DecimalRaw i
-calculatedtransactionAmount (Transaction _ _ amount Credit) = realFracToDecimal 2 amount
-calculatedtransactionAmount (Transaction _ _ amount Debit) = realFracToDecimal 2 (-amount)
 
 userAmount :: User -> Amount
 userAmount = amount
@@ -80,20 +68,15 @@ getUserId = id
 getTransactionId :: Transaction -> TransactionId
 getTransactionId = id
 
-getTransactionAmount :: Integral i => TransactionAmount -> DecimalRaw i
-getTransactionAmount (TransactionAmount amount Credit) = realFracToDecimal 2 amount
-getTransactionAmount (TransactionAmount amount Debit) = realFracToDecimal 2 (-amount)
-
+calculatedTransactionAmount :: Integral i => TransactionAmount -> DecimalRaw i
+calculatedTransactionAmount (TransactionAmount amount Credit) = realFracToDecimal 2 amount
+calculatedTransactionAmount (TransactionAmount amount Debit) = realFracToDecimal 2 (- amount)
 
 data TransactionAmount = TransactionAmount
-  {
-    amount :: !Amount,
+  { amount :: !Amount,
     transactionType :: !TransactionType
   }
-  deriving ( Show, Generic)
+  deriving (Show, Generic)
 
 instance Eq TransactionAmount where
-  a == b = getTransactionAmount a == getTransactionAmount b
-  
-
-  
+  a == b = calculatedTransactionAmount a == calculatedTransactionAmount b

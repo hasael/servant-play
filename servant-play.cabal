@@ -83,6 +83,7 @@ test-suite servant-play-test
       RealTestDb,
       MockedDb,
       DBProperties,
+      MonoidProperties,
       TestBase
   hs-source-dirs:
       test

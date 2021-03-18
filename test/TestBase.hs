@@ -18,6 +18,9 @@ class (Monad m) => CanPropertyTest m where
 monadicProp :: (CanPropertyTest m) => PropertyM m () -> Property
 monadicProp = monadic toProperty
 
+transactionAmount :: Transaction -> Amount
+transactionAmount = amount
+
 idFromUserResponse :: SResponse -> UserId
 idFromUserResponse resp = fromJust $ getUserId <$> decode (simpleBody resp)
 

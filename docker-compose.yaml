@@ -8,3 +8,11 @@ services:
       POSTGRES_PASSWORD: playground
     volumes:
         -  ./data:/var/lib/postgresql/data
+  postgres-test:
+    image: postgres:9.6.20
+    ports:
+      - 5437:5432
+    environment:
+      POSTGRES_PASSWORD: playground
+    volumes:
+        -  ./data-test:/var/lib/postgresql/data

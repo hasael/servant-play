@@ -6,6 +6,7 @@ module Main (main) where
 
 import Control.Concurrent.Async (concurrently_)
 import Control.Monad
+import DBProperties
 import Data.Aeson (encode)
 import Data.ByteString.Char8 (isInfixOf, unpack)
 import qualified Data.ByteString.Char8 as B (ByteString)
@@ -13,14 +14,14 @@ import Data.ByteString.Lazy (toStrict)
 import qualified Data.ByteString.Lazy as LB (ByteString)
 import DbRepository
 import GHC.Conc.IO
-import GHC.Float 
+import GHC.Float
 import GHC.Int (Int64)
 import Lib (app, merge_)
 import Models
+import MonoidProperties
 import Network.HTTP.Types
 import Network.Wai
 import Network.Wai.Test (SResponse (simpleBody, simpleStatus), assertStatus)
-import DBProperties
 import RealTestDb
 import Test.Hspec
 import Test.Hspec.Wai
@@ -42,11 +43,10 @@ import Test.Hspec.Wai.Internal
   )
 import Test.QuickCheck
 import TestBase
-import MonoidProperties
 
 main :: IO ()
 main = do
-  pool <- initTestDbConnection "host=localhost port=5435 dbname=postgres user=postgres password=playground"
+  pool <- initTestDbConnection "host=localhost port=5437 dbname=postgres user=postgres password=playground"
   cleanTables pool
   let myapp = app pool
   hspec $ do
@@ -59,7 +59,7 @@ main = do
         property $ monadicPropIO . prop_get_insert_user pool
     describe "TransactionAmount is a monoid" $ do
       it "Associative" $
-        quickCheck $ withMaxSuccess 1000 (prop_MonoidAssociativity :: TransactionAmount  -> TransactionAmount  -> TransactionAmount -> Bool)
+        quickCheck $ withMaxSuccess 1000 (prop_MonoidAssociativity :: TransactionAmount -> TransactionAmount -> TransactionAmount -> Bool)
       it "Right identity" $
         quickCheck $ property (prop_MonoidRightIdentity :: TransactionAmount -> Bool)
       it "Left identity" $

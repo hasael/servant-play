@@ -9,9 +9,6 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import GHC.Generics
 
-prop_reverse :: [Int] -> Bool
-prop_reverse xs = reverse (reverse xs) == xs
-
 instance Arbitrary UserId where
   arbitrary = genericArbitraryU
   shrink = genericShrink

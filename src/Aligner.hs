@@ -28,5 +28,4 @@ start_ conn = do
   return ()
 
 updateTrxData :: DbRepository IO a => a -> Map UserId TransactionAmount -> IO ()
---updateTrxData conn map = void $ sequence_ $ fmap (\t -> updateUserAmount conn (userId t) (fromRational $ toRational (calculatedtransactionAmount t))) $ elems map
-updateTrxData conn map = sequence_ $ mapWithKey  (\k v -> updateUserAmount conn k (fromRational $ toRational (getTransactionAmount v)) ) map
+updateTrxData conn map = sequence_ $ mapWithKey  (\k v -> updateUserAmount conn k (fromRational $ toRational (calculatedTransactionAmount v)) ) map

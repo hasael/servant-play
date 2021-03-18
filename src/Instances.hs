@@ -11,7 +11,7 @@ import Data.Decimal
 instance Semigroup TransactionAmount where
   a <> b = TransactionAmount finalAmount trxType
     where
-      calcAmount = fromRational $ toRational ( getTransactionAmount a + getTransactionAmount b) 
+      calcAmount = fromRational $ toRational ( calculatedTransactionAmount a + calculatedTransactionAmount b) 
       finalAmount = abs calcAmount
       trxType = if calcAmount < 0 then Debit else Credit
 
