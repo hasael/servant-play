@@ -12,17 +12,20 @@ import Data.ByteString.Char8 (isInfixOf, unpack)
 import qualified Data.ByteString.Char8 as B (ByteString)
 import Data.ByteString.Lazy (toStrict)
 import qualified Data.ByteString.Lazy as LB (ByteString)
+import Data.List (delete)
 import DbRepository
 import GHC.Conc.IO
 import GHC.Float
 import GHC.Int (Int64)
 import Lib (app, merge_)
+import MockedDb
 import Models
 import MonoidProperties
 import Network.HTTP.Types
 import Network.Wai
 import Network.Wai.Test (SResponse (simpleBody, simpleStatus), assertStatus)
 import RealTestDb
+import System.Environment
 import Test.Hspec
 import Test.Hspec.Wai
   ( MatchBody (MatchBody),
@@ -43,14 +46,16 @@ import Test.Hspec.Wai.Internal
   )
 import Test.QuickCheck
 import TestBase
-import MockedDb
 
 main :: IO ()
 main = do
-  pool <- initTestDbConnection "host=localhost port=5437 dbname=postgres user=postgres password=playground"
---  cleanTables pool
---  runTests pool
-  runTests ()
+  as <- getArgs
+  if "real" `elem` as
+    then do
+      pool <- initTestDbConnection "host=localhost port=5437 dbname=postgres user=postgres password=playground"
+      cleanTables pool
+      withArgs (delete "real" as) $ runTests pool
+    else runTests ()
 
 runTests :: DbRepository IO a => a -> IO ()
 runTests c = do
@@ -201,7 +206,7 @@ concurrencySpecs conn app = with (return app) $ do
       let createdUserId = toByteString $ u_value $ idFromUserResponse createUserResp
       app <- getApp
       let concurrency = 10
-      let expectedAmount = (int2Double concurrency) * creditAmount
+      let expectedAmount = int2Double concurrency * creditAmount
       liftIO $ concurrentCallsN (simplePost ("/trx/credit/" <> createdUserId <> "/" <> toByteString creditAmount)) app concurrency
       liftIO $ threadDelay 100000
       liftIO $ merge_ conn
