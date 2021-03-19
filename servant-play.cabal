@@ -92,6 +92,7 @@ test-suite servant-play-test
       aeson
     , async
     , base
+    , containers
     , hspec
     , bytestring
     , hspec-wai
@@ -101,6 +102,7 @@ test-suite servant-play-test
     , servant-play
     , servant-server
     , wai
+    , stm
     , wai-extra
     , warp
     , http-types

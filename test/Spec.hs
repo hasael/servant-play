@@ -43,20 +43,26 @@ import Test.Hspec.Wai.Internal
   )
 import Test.QuickCheck
 import TestBase
+import MockedDb
 
 main :: IO ()
 main = do
   pool <- initTestDbConnection "host=localhost port=5437 dbname=postgres user=postgres password=playground"
-  cleanTables pool
-  let myapp = app pool
+--  cleanTables pool
+--  runTests pool
+  runTests ()
+
+runTests :: DbRepository IO a => a -> IO ()
+runTests c = do
+  let myapp = app c
   hspec $ do
-    spec myapp
-    concurrencySpecs pool myapp
-    describe "Real DbRepository" $ do
+    apiSpec myapp
+    concurrencySpecs c myapp
+    describe "DbRepository" $ do
       it "can create user" $
-        property $ monadicPropIO . prop_insert_any_user pool
+        property $ monadicPropIO . prop_insert_any_user c
       it "creates and reads a user" $
-        property $ monadicPropIO . prop_get_insert_user pool
+        property $ monadicPropIO . prop_get_insert_user c
     describe "TransactionAmount is a monoid" $ do
       it "Associative" $
         quickCheck $ withMaxSuccess 1000 (prop_MonoidAssociativity :: TransactionAmount -> TransactionAmount -> TransactionAmount -> Bool)
@@ -65,8 +71,8 @@ main = do
       it "Left identity" $
         quickCheck $ property (prop_MonoidLeftIdentity :: TransactionAmount -> Bool)
 
-spec :: Application -> Spec
-spec app = with (return app) $ do
+apiSpec :: Application -> Spec
+apiSpec app = with (return app) $ do
   describe "POST /user" $ do
     it "response contains created user" $ do
       let userToCreate = User (UserId 1) "Isaac" "Newton" 0
