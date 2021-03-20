@@ -44,3 +44,6 @@ strictEncode a = toStrict $ encode a
 
 toByteString :: Show a => a -> B.ByteString
 toByteString = pack . show
+
+defaultUser :: UserId -> User 
+defaultUser usrId = User usrId "Haskell" "Curry" 100

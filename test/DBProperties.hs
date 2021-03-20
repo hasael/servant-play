@@ -1,13 +1,17 @@
- {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE BangPatterns #-}
+
 module DBProperties where
 
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, fromMaybe, fromJust)
 import DbRepository
-import Generic.Random 
+import GHC.Generics
+import Generic.Random
 import Models
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
-import GHC.Generics
+import TestBase
 
 instance Arbitrary UserId where
   arbitrary = genericArbitraryU
@@ -38,12 +42,63 @@ prop_insert_any_user conn user = do
   res <- run $ insertUser conn user
   assert $ isJust res
 
-prop_get_insert_user :: (DbRepository m a) => a -> User -> PropertyM m ()
-prop_get_insert_user conn user = do
+prop_user_read_after_insert :: (DbRepository m a) => a -> User -> PropertyM m ()
+prop_user_read_after_insert conn user = do
   ins <- run $ insertUser conn user
   res <- case ins of
     Just usr -> do
       get <- run $ getUserById conn $ getUserId usr
       return $ Just usr == get
+    Nothing -> return False
+  assert res
+
+prop_user_idempotent_read :: (DbRepository m a) => a -> User -> PropertyM m ()
+prop_user_idempotent_read conn user = do
+  ins <- run $ insertUser conn user
+  res <- case ins of
+    Just usr -> do
+      get1 <- run $ getUserById conn $ getUserId usr
+      get2 <- run $ getUserById conn $ getUserId usr
+      return $ get1 == get2 && isJust get1
+    Nothing -> return False
+  assert res
+
+prop_user_correct_amount_after_update :: (DbRepository IO a) => a -> UserId -> Amount -> PropertyM IO ()
+prop_user_correct_amount_after_update conn usrId amount = do
+  ins <- run $ insertUser conn $ defaultUser usrId
+  let newUserId = getUserId $ fromJust ins
+  _ <- run $ updateUserAmount conn newUserId amount
+  get <- run $ getUserById conn newUserId
+  run $ print $ show ins ++"---" ++ show get ++ "--" ++ show amount
+  assert $ maybe False (\u -> userAmount u == amount) get
+
+
+prop_transaction_insert_any :: DbRepository m a => a -> UserId -> Amount -> PropertyM m ()
+prop_transaction_insert_any conn usrId amount = do
+  res <- run $ insertCreditTransaction conn usrId amount
+  assert $ isJust res
+
+
+prop_transaction_read_after_insert :: (DbRepository m a) => a -> UserId -> Amount -> PropertyM m ()
+prop_transaction_read_after_insert conn usrId amount = do
+  ins <- run $ insertCreditTransaction conn usrId amount
+  res <- case ins of
+    Just trx -> do
+      get <- run $ getTransactionById conn $ getTransactionId trx
+      trxs <- run $ getTransactions conn usrId
+      return $ Just trx == get && elem trx trxs
+    Nothing -> return False
+  assert res
+
+prop_transaction_idempotent_read :: (DbRepository m a) => a -> UserId -> Amount -> PropertyM m ()
+prop_transaction_idempotent_read conn usrId amount = do
+  ins <- run $ insertCreditTransaction conn usrId amount
+  res <- case ins of
+    Just trx -> do
+      get1 <- run $ getTransactionById conn $ getTransactionId trx
+      trxs1 <- run $ getTransactions conn usrId
+      get2 <- run $ getTransactionById conn $ getTransactionId trx
+      trxs2 <- run $ getTransactions conn usrId
+      return $ get2 == get1 && trxs1 == trxs2
     Nothing -> return False
   assert res

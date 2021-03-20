@@ -67,7 +67,17 @@ runTests c = do
       it "can create user" $
         property $ monadicPropIO . prop_insert_any_user c
       it "creates and reads a user" $
-        property $ monadicPropIO . prop_get_insert_user c
+        property $ monadicPropIO . prop_user_read_after_insert c
+      it "reads user idempotently" $
+        property $ monadicPropIO . prop_user_idempotent_read c
+--      it "updates user correctly" $
+--        property $ \u a -> monadicPropIO $ prop_user_correct_amount_after_update c u a
+      it "can create transaction" $
+        quickCheck $ withMaxSuccess 1000 $ property $ \u a -> monadicPropIO $ prop_transaction_insert_any c u a
+      it "creates and reads a transaction" $
+        property $ \u a -> monadicPropIO $ prop_transaction_read_after_insert c u a
+      it "reads transaction idempotently" $
+        property $ \u a -> monadicPropIO $ prop_transaction_idempotent_read c u a
     describe "TransactionAmount is a monoid" $ do
       it "Associative" $
         quickCheck $ withMaxSuccess 1000 (prop_MonoidAssociativity :: TransactionAmount -> TransactionAmount -> TransactionAmount -> Bool)
@@ -199,7 +209,7 @@ apiSpec app = with (return app) $ do
 concurrencySpecs :: DbRepository IO a => a -> Application -> Spec
 concurrencySpecs conn app = with (return app) $ do
   describe "GET /user/ amount on concurrent calls" $ do
-    it "response contains correct debit transaction" $ do
+    it "response contains correct credit transaction" $ do
       let userToCreate = User (UserId 1) "Isaac" "Newton" 0
       let creditAmount = 10 :: Amount
       createUserResp <- postJson "/users" $ encode userToCreate

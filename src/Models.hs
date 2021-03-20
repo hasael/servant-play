@@ -54,7 +54,7 @@ data Transaction = Transaction
     amount :: !Amount,
     transactionType :: !TransactionType
   }
-  deriving (Show, Generic)
+  deriving (Eq, Show, Generic)
 
 trxAmount :: Transaction -> TransactionAmount
 trxAmount (Transaction _ _ amount trxType) = TransactionAmount amount trxType

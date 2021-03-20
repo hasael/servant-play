@@ -25,12 +25,13 @@ instance CanPropertyTest Identity where
 monadicPropId :: (CanPropertyTest IO) => PropertyM Identity () -> Property
 monadicPropId = monadic toProperty
 
+{-# NOINLINE userData #-}
 userData :: TVar (Map UserId User)
 userData = unsafePerformIO $ newTVarIO empty
 
+{-# NOINLINE transactionData #-}
 transactionData :: TVar (Map TransactionId Transaction )
 transactionData = unsafePerformIO $ newTVarIO empty
-
 
 instance DbRepository IO () where
   getUserAmount _ userId =
