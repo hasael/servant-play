@@ -12,12 +12,20 @@ import Data.Map
 import Data.Maybe
 import DbRepository
 import GHC.IO
+import GHC.Show
 import Models
+  ( Transaction (Transaction, userId),
+    TransactionId (TransactionId),
+    TransactionType (Credit, Debit),
+    User,
+    UserId (UserId),
+    userAmount,
+  )
 import System.IO.Unsafe
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import TestBase
-import Prelude (($), (<$>), (==), (+))
+import Prelude (fst, print, snd, ($), (+), (++), (<$>), (==))
 
 instance CanPropertyTest Identity where
   toProperty = runIdentity
@@ -25,74 +33,86 @@ instance CanPropertyTest Identity where
 monadicPropId :: (CanPropertyTest IO) => PropertyM Identity () -> Property
 monadicPropId = monadic toProperty
 
-{-# NOINLINE userData #-}
-userData :: TVar (Map UserId User)
-userData = unsafePerformIO $ newTVarIO empty
+newDB :: IO AppDatabase
+newDB = do
+  a <- newTVarIO empty
+  b <- newTVarIO empty
+  return (a, b)
 
-{-# NOINLINE transactionData #-}
-transactionData :: TVar (Map TransactionId Transaction )
-transactionData = unsafePerformIO $ newTVarIO empty
+type TransactionTable = TVar (Map TransactionId Transaction)
 
-instance DbRepository IO () where
-  getUserAmount _ userId =
+type UsersTable = TVar (Map UserId User)
+
+type AppDatabase = (TransactionTable, UsersTable)
+
+instance DbRepository IO AppDatabase where
+  getUserAmount db userId =
     atomically $ do
-      currData <- readTVar userData
+      currData <- readTVar $ snd db
       let result = lookup userId currData
       return $ userAmount <$> result
 
-  updateUserAmount pool userId amount =
+  updateUserAmount db userId amount =
     atomically $ do
-      currData <- readTVar userData
+      currData <- readTVar $ snd db
       let userWithAmount = withAmount amount <$> lookup userId currData
       case userWithAmount of
         Just usr -> do
           let newValues = insert userId usr currData
-          writeTVar userData newValues
+          writeTVar (snd db) newValues
           return ()
         Nothing -> return ()
 
-  getAllUsers _ = atomically $ do
-    currData <- readTVar userData
-    let users = elems currData
-    return users
+  getAllUsers db = do
+    atomically $ do
+      currData <- readTVar $ snd db
+      let users = elems currData
+      return users
 
-  getUserById _ userId = atomically $ do
-    currData <- readTVar userData
-    return $ lookup userId currData
+  getUserById db userId =
+    atomically $ do
+      currData <- readTVar $ snd db
+      return $ lookup userId currData
 
-  insertUser _ u = atomically $ do
-    currData <- readTVar userData
-    let newId = UserId (size currData + 1)
-    let newUser = withId u newId
-    let newValues = insert newId newUser currData
-    writeTVar userData newValues
-    return $ Just newUser
+  insertUser db u =
+    atomically $ do
+      currData <- readTVar $ snd db
+      let newId = UserId (size currData + 1)
+      let newUser = withId u newId
+      let newValues = insert newId newUser currData
+      writeTVar (snd db) newValues
+      return $ Just newUser
 
-  getTransactionById _ trxId = atomically $ do
-    currData <- readTVar transactionData
-    return $ lookup trxId currData
+  getTransactionById db trxId =
+    atomically $ do
+      currData <- readTVar $ fst db
+      return $ lookup trxId currData
 
-  getAllTransactions pool = atomically $ do
-    currData <- readTVar transactionData
-    let trxs = elems currData
-    return trxs
+  getAllTransactions db =
+    atomically $ do
+      currData <- readTVar $ fst db
+      let trxs = elems currData
+      return trxs
 
-  getTransactions pool usrId =  atomically $ do
-    currData <- readTVar transactionData
-    return $ elems $ filter (\t -> userId t == usrId) currData
+  getTransactions db usrId =
+    atomically $ do
+      currData <- readTVar $ fst db
+      return $ elems $ filter (\t -> userId t == usrId) currData
 
-  insertCreditTransaction _ userId amount = atomically $ do
-    currData <- readTVar transactionData
-    let newId = TransactionId (size currData + 1)
-    let newTrx = Transaction newId userId amount Credit
-    let newValues = insert newId newTrx currData
-    writeTVar transactionData newValues
-    return $ Just newTrx
+  insertCreditTransaction db userId amount =
+    atomically $ do
+      currData <- readTVar $ fst db
+      let newId = TransactionId (size currData + 1)
+      let newTrx = Transaction newId userId amount Credit
+      let newValues = insert newId newTrx currData
+      writeTVar (fst db) newValues
+      return $ Just newTrx
 
-  insertDebitTransaction _ userId amount = atomically $ do
-    currData <- readTVar transactionData
-    let newId = TransactionId (size currData + 1)
-    let newTrx = Transaction newId userId amount Debit 
-    let newValues = insert newId newTrx currData
-    writeTVar transactionData newValues
-    return $ Just newTrx
+  insertDebitTransaction db userId amount =
+    atomically $ do
+      currData <- readTVar $ fst db
+      let newId = TransactionId (size currData + 1)
+      let newTrx = Transaction newId userId amount Debit
+      let newValues = insert newId newTrx currData
+      writeTVar (fst db) newValues
+      return $ Just newTrx

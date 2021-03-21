@@ -55,7 +55,9 @@ main = do
       pool <- initTestDbConnection "host=localhost port=5437 dbname=postgres user=postgres password=playground"
       cleanTables pool
       withArgs (delete "real" as) $ runTests pool
-    else runTests ()
+    else do
+      db <- newDB
+      runTests db
 
 runTests :: DbRepository IO a => a -> IO ()
 runTests c = do
@@ -70,8 +72,8 @@ runTests c = do
         property $ monadicPropIO . prop_user_read_after_insert c
       it "reads user idempotently" $
         property $ monadicPropIO . prop_user_idempotent_read c
---      it "updates user correctly" $
---        property $ \u a -> monadicPropIO $ prop_user_correct_amount_after_update c u a
+      --      it "updates user correctly" $
+      --        property $ \u a -> monadicPropIO $ prop_user_correct_amount_after_update c u a
       it "can create transaction" $
         quickCheck $ withMaxSuccess 1000 $ property $ \u a -> monadicPropIO $ prop_transaction_insert_any c u a
       it "creates and reads a transaction" $
