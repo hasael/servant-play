@@ -60,14 +60,14 @@ fetchTransactions conn userId = do
     [] -> throwError err404
     a -> return a
 
-addCreditTransaction :: (DbRepository IO a) => a -> UserId -> Amount  -> Handler Transaction
+addCreditTransaction :: (DbRepository IO a) => a -> UserId -> Amount -> Handler Transaction
 addCreditTransaction conn userId amount = do
   result <- liftIO $ createCreditTransaction conn userId amount
   case result of
     CreditUserNotFound -> throwError err404
     CorrectCredit t -> liftIO $ forkIO (void (increment userId $ trxAmount t)) >> return t
 
-addDebitTransaction :: (DbRepository IO a) => a -> UserId -> Amount  -> Handler Transaction
+addDebitTransaction :: (DbRepository IO a) => a -> UserId -> Amount -> Handler Transaction
 addDebitTransaction conn userId amount = do
   result <- liftIO $ createDebitTransaction conn userId amount
   case result of

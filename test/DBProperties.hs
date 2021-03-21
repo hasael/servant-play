@@ -1,10 +1,8 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE BangPatterns #-}
 
 module DBProperties where
 
-import Data.Maybe (isJust, fromMaybe, fromJust)
+import Data.Maybe (fromJust, fromMaybe, isJust)
 import DbRepository
 import GHC.Generics
 import Generic.Random
@@ -69,15 +67,13 @@ prop_user_correct_amount_after_update conn usrId amount = do
   let newUserId = getUserId $ fromJust ins
   _ <- run $ updateUserAmount conn newUserId amount
   get <- run $ getUserById conn newUserId
-  run $ print $ show ins ++"---" ++ show get ++ "--" ++ show amount
+  run $ print $ show ins ++ "---" ++ show get ++ "--" ++ show amount
   assert $ maybe False (\u -> userAmount u == amount) get
-
 
 prop_transaction_insert_any :: DbRepository m a => a -> UserId -> Amount -> PropertyM m ()
 prop_transaction_insert_any conn usrId amount = do
   res <- run $ insertCreditTransaction conn usrId amount
   assert $ isJust res
-
 
 prop_transaction_read_after_insert :: (DbRepository m a) => a -> UserId -> Amount -> PropertyM m ()
 prop_transaction_read_after_insert conn usrId amount = do

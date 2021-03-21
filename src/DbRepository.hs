@@ -5,9 +5,9 @@ module DbRepository where
 import Models (Amount, Transaction, TransactionId, User, UserId)
 
 class Monad m => DbRepository m a where
-  getUserAmount :: a -> UserId -> m (Maybe Amount )
+  getUserAmount :: a -> UserId -> m (Maybe Amount)
 
-  updateUserAmount :: a -> UserId -> Amount  -> m ()
+  updateUserAmount :: a -> UserId -> Amount -> m ()
 
   getAllUsers :: a -> m [User]
 
