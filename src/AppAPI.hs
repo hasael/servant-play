@@ -16,8 +16,8 @@ type UserAPI =
 type TransactionsAPI =
   "trx"
     :> ( Capture "userId" UserId :> Get '[JSON] [Transaction]
-           :<|> "credit" :> Capture "userId" UserId :> Capture "amount" Amount  :> Post '[JSON] Transaction
-           :<|> "debit" :> Capture "userId" UserId :> Capture "amount" Amount  :> Post '[JSON] Transaction
+           :<|> "credit" :> Capture "userId" UserId :> Capture "amount" Amount :> Post '[JSON] Transaction
+           :<|> "debit" :> Capture "userId" UserId :> Capture "amount" Amount :> Post '[JSON] Transaction
        )
 
 type API = UserAPI :<|> TransactionsAPI
