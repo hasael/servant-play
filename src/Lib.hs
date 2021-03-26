@@ -5,6 +5,7 @@ module Lib
     app,
     merge_,
     startAligner,
+    newState
   )
 where
 
@@ -14,15 +15,21 @@ import DbRepository (DbRepository)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
+import Models ( AppState )
+import Control.Concurrent.STM
+import Data.Map
 
-merge_ :: (DbRepository IO a) => a -> IO ()
+merge_ :: (DbRepository IO a) => a -> AppState -> IO ()
 merge_ = A.merge_
 
-startAligner :: (DbRepository IO a) => a -> IO ()
+startAligner :: (DbRepository IO a) => a -> AppState -> IO ()
 startAligner = A.start_
 
 startApp :: Int -> Application -> IO ()
 startApp port app = run port $ logStdoutDev app
 
-app :: (DbRepository IO a) => a -> Application
+app :: (DbRepository IO a) => a -> AppState -> Application
 app = S.app
+
+newState :: IO AppState 
+newState = atomically $ newTVar empty

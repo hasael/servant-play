@@ -14,6 +14,8 @@ import GHC.Base (Double, Eq, Int, Ord, String)
 import GHC.Float.ConversionUtils
 import GHC.Generics
 import GHC.Show (Show)
+import Data.Map
+import GHC.Conc.Sync
 import Servant
 import Prelude (Float, Fractional, Integral, Real (toRational), realToFrac, (&&), (+), (<), (==), (>))
 
@@ -55,6 +57,8 @@ data Transaction = Transaction
     transactionType :: !TransactionType
   }
   deriving (Eq, Show, Generic)
+
+type AppState = TVar (Map UserId [TransactionAmount])
 
 trxAmount :: Transaction -> TransactionAmount
 trxAmount (Transaction _ _ amount trxType) = TransactionAmount amount trxType

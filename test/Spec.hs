@@ -16,7 +16,7 @@ import DbRepository
 import GHC.Conc.IO
 import GHC.Float
 import GHC.Int (Int64)
-import Lib (app, merge_)
+import Lib (app, merge_, newState)
 import MockedDb
 import Models
 import MonoidProperties
@@ -49,21 +49,22 @@ import TestBase
 main :: IO ()
 main = do
   as <- getArgs
+  state <- newState
   if "real" `elem` as
     then do
       pool <- initTestDbConnection "host=localhost port=5437 dbname=postgres user=postgres password=playground"
       cleanTables pool
-      withArgs (delete "real" as) $ runTests pool
+      withArgs (delete "real" as) $ runTests pool state
     else do
       db <- newDB
-      runTests db
+      runTests db state
 
-runTests :: DbRepository IO a => a -> IO ()
-runTests c = do
-  let myapp = app c
+runTests :: DbRepository IO a => a -> AppState -> IO ()
+runTests c state = do
+  let myapp = app c state
   hspec $ do
     apiSpec myapp
-    concurrencySpecs c myapp
+    concurrencySpecs c state myapp
     describe "DbRepository" $ do
       it "can create user" $
         property $ monadicPropIO . prop_insert_any_user c
@@ -207,8 +208,8 @@ apiSpec app = with (return app) $ do
       liftIO $ userAmount firstUserResp `shouldBe` creditAmount
       liftIO $ userAmount secondUserResp `shouldBe` creditAmount - debitAmount
 
-concurrencySpecs :: DbRepository IO a => a -> Application -> Spec
-concurrencySpecs conn app = with (return app) $ do
+concurrencySpecs :: DbRepository IO a => a -> AppState -> Application -> Spec
+concurrencySpecs conn state app = with (return app) $ do
   describe "GET /user/ amount on concurrent calls" $ do
     it "response contains correct credit transaction" $ do
       let userToCreate = User (UserId 1) "Isaac" "Newton" 0
@@ -220,7 +221,7 @@ concurrencySpecs conn app = with (return app) $ do
       let expectedAmount = int2Double concurrency * creditAmount
       liftIO $ concurrentCallsN (simplePost ("/trx/credit/" <> createdUserId <> "/" <> toByteString creditAmount)) app concurrency
       liftIO $ threadDelay 100000
-      liftIO $ merge_ conn
+      liftIO $ merge_ conn state
       getUserResponse <- get ("/users/" <> createdUserId)
       let userResponse = decodeUser getUserResponse
       liftIO $ userAmount userResponse `shouldBe` expectedAmount
