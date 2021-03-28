@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
-
+{-# LANGUAGE TemplateHaskell #-}
 module TestBase where
 
 import Data.Aeson
@@ -11,6 +11,8 @@ import Models
 import Network.Wai.Test
 import Test.QuickCheck (Property)
 import Test.QuickCheck.Monadic
+import Refined
+import Data.Either
 
 class (Monad m) => CanPropertyTest m where
   toProperty :: m Property -> Property
@@ -47,3 +49,6 @@ toByteString = pack . show
 
 defaultUser :: UserId -> User 
 defaultUser usrId = User usrId "Haskell" "Curry" 100
+
+mkUserId :: Int -> UserId
+mkUserId id =  UserId $ fromRight (error "invalid userId") $ refine id

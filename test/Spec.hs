@@ -92,7 +92,7 @@ apiSpec :: Application -> Spec
 apiSpec app = with (return app) $ do
   describe "POST /user" $ do
     it "response contains created user" $ do
-      let userToCreate = User (UserId 1) "Isaac" "Newton" 0
+      let userToCreate = User (mkUserId 1) "Isaac" "Newton" 0
 
       resp <- postJson "/users" $ encode userToCreate
       let createdUser = strictEncode $ userToCreate `withId` idFromUserResponse resp
@@ -101,20 +101,18 @@ apiSpec app = with (return app) $ do
 
   describe "GET /users/id" $ do
     it "responds with correct user" $ do
-      let userToCreate = User (UserId 1) "Edmond" "Halley" 0
+      let userToCreate = User (mkUserId 1) "Edmond" "Halley" 0
       resp <- postJson "/users" $ encode userToCreate
-
-      let createdUserId = toByteString $ u_value $ idFromUserResponse resp
+      let createdUserId = toByteString $ idFromUserResponse resp
       let createdUser = strictEncode $ userToCreate `withId` idFromUserResponse resp
-
       get ("/users/" <> createdUserId) `bodyShouldEqual` createdUser
 
   describe "GET /users" $ do
     it "responds with 200" $ do
       get "/users" `shouldRespondWith` 200
     it "responds with correct [User]" $ do
-      let firstUserToCreate = User (UserId 1) "Johannes" "Kepler" 0
-      let secondUserToCreate = User (UserId 1) "Nicola" "Copernicus" 0
+      let firstUserToCreate = User (mkUserId 1) "Johannes" "Kepler" 0
+      let secondUserToCreate = User (mkUserId 1) "Nicola" "Copernicus" 0
 
       firstResp <- postJson "/users" $ encode firstUserToCreate
       secondResp <- postJson "/users" $ encode secondUserToCreate
@@ -128,11 +126,11 @@ apiSpec app = with (return app) $ do
 
   describe "POST /trx/credit/" $ do
     it "response contains credit transaction" $ do
-      let userToCreate = User (UserId 1) "Isaac" "Newton" 0
+      let userToCreate = User (mkUserId 1) "Isaac" "Newton" 0
       let myAmount = 10 :: Amount
       resp <- postJson "/users" $ encode userToCreate
       let createdUserId = idFromUserResponse resp
-      let createdUserIdStr = toByteString $ u_value createdUserId
+      let createdUserIdStr = toByteString createdUserId
       trxResp <- simplePost ("/trx/credit/" <> createdUserIdStr <> "/" <> toByteString myAmount)
       let createdTransaction = decodeTransaction trxResp
       liftIO $ transactionAmount createdTransaction `shouldBe` myAmount
@@ -140,26 +138,26 @@ apiSpec app = with (return app) $ do
 
     it "responds with 404 for not existing user" $ do
       let myAmount = toByteString 10
-      let createdUserId = toByteString $ -1
+      let createdUserId = toByteString 999999
       simplePost ("/trx/credit/" <> createdUserId <> "/" <> myAmount) `shouldRespondWith` 404
 
   describe "GET /trx/credit/" $ do
     it "response contains correct credit transaction" $ do
-      let userToCreate = User (UserId 1) "Isaac" "Newton" 0
+      let userToCreate = User (mkUserId 1) "Isaac" "Newton" 0
 
       resp <- postJson "/users" $ encode userToCreate
-      let createdUserId = toByteString $ u_value $ idFromUserResponse resp
+      let createdUserId = toByteString $ idFromUserResponse resp
       trxResp <- simplePost ("/trx/credit/" <> createdUserId <> "/10")
       get ("/trx/" <> createdUserId) `bodyShouldContain` toStrict (simpleBody trxResp)
 
   describe "POST /trx/debit/" $ do
     it "responds with 200 for user with amount" $ do
-      let userToCreate = User (UserId 1) "Isaac" "Newton" 0
+      let userToCreate = User (mkUserId 1) "Isaac" "Newton" 0
       let creditAmount = 10
       let debitAmount = 5
       resp <- postJson "/users" $ encode userToCreate
       let createdUserId = idFromUserResponse resp
-      let createdUserIdStr = toByteString (u_value createdUserId)
+      let createdUserIdStr = toByteString  createdUserId
       simplePost ("/trx/credit/" <> createdUserIdStr <> "/" <> toByteString creditAmount)
       trxResp <- simplePost ("/trx/debit/" <> createdUserIdStr <> "/" <> toByteString debitAmount)
       let createdTransaction = decodeTransaction trxResp
@@ -167,38 +165,38 @@ apiSpec app = with (return app) $ do
       liftIO $ userId createdTransaction `shouldBe` createdUserId
 
     it "responds with 403 for user without amount" $ do
-      let userToCreate = User (UserId 1) "Isaac" "Newton" 0
+      let userToCreate = User (mkUserId 1) "Isaac" "Newton" 0
       let creditAmount = toByteString 5
       let debitAmount = toByteString 6
       resp <- postJson "/users" $ encode userToCreate
-      let createdUserId = toByteString $ u_value $ idFromUserResponse resp
+      let createdUserId = toByteString $ idFromUserResponse resp
       simplePost ("/trx/credit/" <> createdUserId <> "/" <> creditAmount)
       simplePost ("/trx/debit/" <> createdUserId <> "/" <> debitAmount) `shouldRespondWith` 403
 
     it "responds with 404 for not existing user" $ do
       let myAmount = toByteString 10
-      let createdUserId = toByteString $ -1
+      let createdUserId = toByteString 9999
       simplePost ("/trx/debit/" <> createdUserId <> "/" <> myAmount) `shouldRespondWith` 404
 
   describe "GET /trx/debit/" $ do
     it "response contains correct debit transaction" $ do
-      let userToCreate = User (UserId 1) "Isaac" "Newton" 0
+      let userToCreate = User (mkUserId 1) "Isaac" "Newton" 0
       let creditAmount = toByteString 10
       let debitAmount = toByteString 5
       resp <- postJson "/users" $ encode userToCreate
-      let createdUserId = toByteString $ u_value $ idFromUserResponse resp
+      let createdUserId = toByteString $ idFromUserResponse resp
       simplePost ("/trx/credit/" <> createdUserId <> "/" <> creditAmount)
       trxResp <- simplePost ("/trx/debit/" <> createdUserId <> "/" <> debitAmount)
       get ("/trx/" <> createdUserId) `bodyShouldContain` toStrict (simpleBody trxResp)
 
   describe "GET /user/ amount" $ do
     it "response contains correct debit transaction" $ do
-      let userToCreate = User (UserId 1) "Isaac" "Newton" 0
+      let userToCreate = User (mkUserId 1) "Isaac" "Newton" 0
       let creditAmount = 10
       let debitAmount = 5
 
       createUserResp <- postJson "/users" $ encode userToCreate
-      let createdUserId = toByteString $ u_value $ idFromUserResponse createUserResp
+      let createdUserId = toByteString $ idFromUserResponse createUserResp
       simplePost ("/trx/credit/" <> createdUserId <> "/" <> toByteString creditAmount)
       firstGetUserResponse <- get ("/users/" <> createdUserId)
       simplePost ("/trx/debit/" <> createdUserId <> "/" <> toByteString debitAmount)
@@ -212,10 +210,10 @@ concurrencySpecs :: DbRepository IO a => a -> AppState -> Application -> Spec
 concurrencySpecs conn state app = with (return app) $ do
   describe "GET /user/ amount on concurrent calls" $ do
     it "response contains correct credit transaction" $ do
-      let userToCreate = User (UserId 1) "Isaac" "Newton" 0
+      let userToCreate = User (mkUserId 1) "Isaac" "Newton" 0
       let creditAmount = 10 :: Amount
       createUserResp <- postJson "/users" $ encode userToCreate
-      let createdUserId = toByteString $ u_value $ idFromUserResponse createUserResp
+      let createdUserId = toByteString $ idFromUserResponse createUserResp
       app <- getApp
       let concurrency = 10
       let expectedAmount = int2Double concurrency * creditAmount

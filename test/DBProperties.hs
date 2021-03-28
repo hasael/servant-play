@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
-
+{-# LANGUAGE GeneralisedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
 module DBProperties where
 
 import Data.Maybe (fromJust, fromMaybe, isJust)
@@ -11,9 +13,19 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import TestBase
 
+import Data.Either 
+import Refined as R
+
+
 instance Arbitrary UserId where
-  arbitrary = genericArbitraryU
-  shrink = genericShrink
+  arbitrary = do
+    --as <- listOf (arbitrary :: Gen Int)
+    b <- chooseInt (1,1000000) 
+    case refine b of
+      Right a -> return $ UserId $ a
+      Left _ -> error "error generating user id arbitrary"
+    
+  shrink (UserId v) = UserId <$> shrink v
 
 instance Arbitrary User where
   arbitrary = genericArbitraryU

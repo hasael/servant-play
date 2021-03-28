@@ -42,6 +42,8 @@ library
       src
   build-depends:
       aeson
+    , refined
+    , either
     , base >=4.7 && <5
     , Decimal
     , containers
@@ -54,6 +56,7 @@ library
     , wai
     , warp
     , stm
+    , text
   default-language: Haskell2010
 
 executable servant-play-exe
@@ -92,6 +95,7 @@ test-suite servant-play-test
   build-depends:
       aeson
     , async
+    , refined
     , base
     , containers
     , hspec
@@ -109,4 +113,5 @@ test-suite servant-play-test
     , http-types
     , postgresql-simple
     , resource-pool
+    , refined
   default-language: Haskell2010

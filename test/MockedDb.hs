@@ -77,7 +77,7 @@ instance DbRepository IO AppDatabase where
   insertUser db u =
     atomically $ do
       currData <- readTVar $ snd db
-      let newId = UserId (size currData + 1)
+      let newId = mkUserId (size currData + 1)
       let newUser = withId u newId
       let newValues = insert newId newUser currData
       writeTVar (snd db) newValues
