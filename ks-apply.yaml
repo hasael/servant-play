@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: haskell-servant
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: haskell-servant
+    spec:
+      containers:
+      - name: haskell-servant
+        image: elmanhasa/haskell-servant:0.1.0.1
+        ports:
+        - name: http
+          containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: haskell-servant
+  labels:
+    app: haskell-servant-service
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+  selector:
+    app: haskell-servant
+  type: LoadBalancer

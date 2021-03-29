@@ -2,8 +2,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
-module MockedDb where
+module InMemoryDb(newDB) where
 
 import Control.Concurrent.STM
 import Control.Monad
@@ -14,24 +15,10 @@ import DbRepository
 import GHC.IO
 import GHC.Show
 import Models
-  ( Transaction (Transaction, userId),
-    TransactionId (TransactionId),
-    TransactionType (Credit, Debit),
-    User,
-    UserId (UserId),
-    userAmount,
-  )
 import System.IO.Unsafe
-import Test.QuickCheck
-import Test.QuickCheck.Monadic
-import TestBase
-import Prelude (fst, print, snd, ($), (+), (++), (<$>), (==))
-
-instance CanPropertyTest Identity where
-  toProperty = runIdentity
-
-monadicPropId :: (CanPropertyTest IO) => PropertyM Identity () -> Property
-monadicPropId = monadic toProperty
+import Prelude (fst, print, snd, ($), (+), (++), (<$>), (==), Int, error)
+import Refined
+import Data.Either
 
 newDB :: IO AppDatabase
 newDB = do
@@ -116,3 +103,12 @@ instance DbRepository IO AppDatabase where
       let newValues = insert newId newTrx currData
       writeTVar (fst db) newValues
       return $ Just newTrx
+
+mkUserId :: Int -> UserId
+mkUserId id =  UserId $ fromRight (error "invalid userId") $ refine id
+
+withId :: User -> UserId -> User
+withId user userId = User userId (name user) (lastName user) ((amount :: User -> Amount) user)
+
+withAmount ::  Amount -> User -> User
+withAmount amount user = User (getUserId user) (name user) (lastName user) amount

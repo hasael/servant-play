@@ -28,6 +28,7 @@ library
   exposed-modules:
       Lib,
       RealDb,
+      InMemoryDb,
       DbRepository,
       Models
   other-modules:
@@ -35,7 +36,7 @@ library
       AppAPI,
       AppServer,
       Aligner,
-      TransactionService
+      TransactionService,
       Instances,
       GCounter
   hs-source-dirs:
@@ -44,7 +45,7 @@ library
       aeson
     , refined
     , either
-    , base >=4.7 && <5
+    , base
     , Decimal
     , containers
     , transformers
@@ -85,7 +86,6 @@ test-suite servant-play-test
   other-modules:
       Paths_servant_play,
       RealTestDb,
-      MockedDb,
       DBProperties,
       MonoidProperties,
       TestBase

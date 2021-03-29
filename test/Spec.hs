@@ -17,7 +17,7 @@ import GHC.Conc.IO
 import GHC.Float
 import GHC.Int (Int64)
 import Lib (app, merge_, newState)
-import MockedDb
+import InMemoryDb
 import Models
 import MonoidProperties
 import Network.HTTP.Types
