@@ -1,6 +1,5 @@
 FROM arm32v7/debian:buster
 RUN apt-get update
-RUN apt-get upgrade -y
 RUN apt-get install -y wget tar build-essential haskell-platform
 
 WORKDIR /opt/servant-play
