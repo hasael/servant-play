@@ -29,7 +29,6 @@ jobs:
           ${{ runner.os }}-build-${{ env.cache-name }}-
           ${{ runner.os }}-build-
           ${{ runner.os }}-
-
     - name: Install dependencies
       run: |
         cabal update
@@ -38,11 +37,10 @@ jobs:
       run: cabal build --enable-tests --enable-benchmarks all
     - name: Run tests
       run: cabal test all --test-show-details=streaming
+    - name: Docker layer cache
+      uses: satackey/action-docker-layer-caching@v0.0.11
+      continue-on-error: true
     - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v1
-      with: 
-        driver-opts: image=multiarch/qemu-user-static
-    - name: Setup docker fix
       run: |
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
         docker buildx create --name multiarch --driver docker-container --use
@@ -53,6 +51,7 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+
     -
       name: Build and push
       id: docker_build
