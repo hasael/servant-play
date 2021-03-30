@@ -59,4 +59,4 @@ jobs:
       with:
         platforms: linux/armhf
         push: true
-        tags: elmanhasa/haskell-base:latest
+        tags: elmanhasa/haskell-servant:latest
