@@ -20,7 +20,7 @@ import Refined as R
 instance Arbitrary UserId where
   arbitrary = do
     --as <- listOf (arbitrary :: Gen Int)
-    b <- chooseInt (1,1000000) 
+    b <- choose (1,1000000) 
     case refine b of
       Right a -> return $ UserId $ a
       Left _ -> error "error generating user id arbitrary"
