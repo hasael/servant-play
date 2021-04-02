@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: haskell-servant
-        image: elmanhasa/haskell-servant:0.1.0.1
+        image: elmanhasa/haskell-servant:latest
         ports:
         - name: http
           containerPort: 8080
