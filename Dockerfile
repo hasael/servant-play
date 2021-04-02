@@ -1,22 +1,20 @@
-FROM elmanhasa/haskell-base:local
+FROM arm64v8/alpine:latest
+ 
+RUN apk add curl wget xz git bash
+RUN adduser -D el 
+RUN mkdir -m 0755 /nix && chown el /nix
+USER el
+WORKDIR /home/el
+RUN wget https://nixos.org/nix/install 
+RUN /bin/bash ./install
 
-#RUN cabal install Cabal cabal-install
-WORKDIR /opt/servant-play
+RUN source /home/el/.nix-profile/etc/profile.d/nix.sh 
+ENV PATH=/home/el/.nix-profile/bin/:$PATH
+ENV NIX_PATH=/home/el/.nix-defexpr/channels
+RUN nix-env --version
 
-#RUN apt-get update && apt-get install -y cabal-install 
-#RUN /root/.cabal/bin/cabal update
-RUN apt-get update && apt-get install -y libpq-dev
+COPY . /home/el/servant-play
+WORKDIR /home/el/servant-play
 
-# Add just the .cabal file to capture dependencies
-COPY ./servant-play.cabal /opt/servant-play/servant-play.cabal
-
-# Docker will cache this command as a layer, freeing us up to
-# modify source code without re-installing dependencies
-# (unless the .cabal file changes!)
-RUN cabal build --only-dependencies 
-
-# Add and Install Application Code
-COPY . /opt/servant-play
-RUN cabal install
-
-CMD ["/opt/servant-play/dist/build/servant-play-exe/servant-play-exe"]
+RUN nix-build release.nix
+CMD ["/home/el/servant-play/result/bin/servant-play-exe"]
