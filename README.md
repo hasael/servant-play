@@ -1,4 +1,6 @@
 # servant-play
+[![Haskell CI](https://github.com/hasael/servant-play/actions/workflows/servant-play-ci.yml/badge.svg)](https://github.com/hasael/servant-play/actions/workflows/servant-play-ci.yml)
+
 HTTP Api using Servant.
 
 A Simple implementation of a User - Transaction application.
