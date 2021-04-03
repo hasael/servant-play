@@ -17,7 +17,7 @@ jobs:
         aws_key_id: ${{ secrets.AWS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_ACCESS_KEY }}
         aws_bucket: ${{ secrets.K8S_STATE_BUCKET }}
-        source_dir: /k8s
+        source_dir: k8s
   test:
 
     runs-on: ubuntu-latest
