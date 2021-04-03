@@ -4,6 +4,8 @@ metadata:
   name: haskell-servant
 spec:
   replicas: 1
+  selector:
+    app: haskell-servant
   template:
     metadata:
       labels:
