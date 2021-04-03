@@ -46,6 +46,7 @@ server :: (DbRepository IO a) => a -> ServerT API AppHandler
 server connectionsPool =
   userServer connectionsPool
     :<|> transactionsServer connectionsPool
+    :<|> getVersion
 
 fetchUsers :: DbRepository IO a => a -> AppHandler [User]
 fetchUsers conn = liftIO $ getAllUsers conn
@@ -83,6 +84,9 @@ addDebitTransaction conn userId amount = do
     DebitUserNotFound -> throwError err404
     IncorrectAmount -> throwError err403
     CorrectDebit t -> liftIO $ forkIO (void (increment state userId $ trxAmount t)) >> return t
+
+getVersion :: AppHandler String
+getVersion = return "0.1.0.0"
 
 notFoundResponse :: Maybe a -> AppHandler a
 notFoundResponse Nothing = throwError err404

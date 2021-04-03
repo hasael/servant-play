@@ -19,5 +19,5 @@ type TransactionsAPI =
            :<|> "credit" :> Capture "userId" UserId :> Capture "amount" Amount :> Post '[JSON] Transaction
            :<|> "debit" :> Capture "userId" UserId :> Capture "amount" Amount :> Post '[JSON] Transaction
        )
-
-type API = UserAPI :<|> TransactionsAPI
+type VersionAPI = "version" :> Get '[JSON] String
+type API = UserAPI :<|> TransactionsAPI :<|> VersionAPI
