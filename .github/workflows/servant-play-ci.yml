@@ -7,6 +7,16 @@ on:
     branches: [ master ]
 
 jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: shallwefootball/upload-s3-action@v1.1.3
+      with:
+        aws_key_id: ${{ secrets.AWS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+        aws_bucket: ${{ secrets.K8S_STATE_BUCKET }}
+        source_dir: /k8s
   test:
 
     runs-on: ubuntu-latest
