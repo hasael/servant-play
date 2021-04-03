@@ -5,7 +5,8 @@ metadata:
 spec:
   replicas: 1
   selector:
-    app: haskell-servant
+    matchLabels:
+      app: haskell-servant
   template:
     metadata:
       labels:
