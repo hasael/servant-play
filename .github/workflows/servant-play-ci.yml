@@ -12,12 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: shallwefootball/upload-s3-action@master
+    - uses: ochanje210/simple-s3-upload-action@v1.0.0
       with:
-        aws_key_id: ${{ secrets.AWS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-        aws_bucket: ${{ secrets.K8S_STATE_BUCKET }}
-        source_dir: k8s
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+        AWS_S3_BUCKET: ${{ secrets.K8S_STATE_BUCKET }}
+        SOURCE_DIR: k8s
+        DEST_DIR: /
   test:
 
     runs-on: ubuntu-latest
