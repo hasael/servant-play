@@ -86,7 +86,7 @@ addDebitTransaction conn userId amount = do
     CorrectDebit t -> liftIO $ forkIO (void (increment state userId $ trxAmount t)) >> return t
 
 getVersion :: AppHandler String
-getVersion = return "0.1.0.0"
+getVersion = return "0.1.0.1"
 
 notFoundResponse :: Maybe a -> AppHandler a
 notFoundResponse Nothing = throwError err404
