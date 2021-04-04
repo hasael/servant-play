@@ -1,19 +1,19 @@
-{ mkDerivation, aeson, async, base, bytestring, containers, Decimal
-, either, generic-random, hspec, hspec-wai, hspec-wai-json
+{ mkDerivation, aeson, async, base, bytestring, co-log, containers
+, Decimal, either, generic-random, hspec, hspec-wai, hspec-wai-json
 , http-types, lib, postgresql-simple, QuickCheck, refined
 , resource-pool, servant-server, stm, text, transformers, wai
 , wai-extra, warp, yaml
 }:
 mkDerivation {
   pname = "servant-play";
-  version = "0.1.0.0";
+  version = "0.1.0.2";
   src = ./.;
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [
-    aeson base bytestring containers Decimal either postgresql-simple
-    refined resource-pool servant-server stm text transformers wai
-    wai-extra warp
+    aeson base bytestring co-log containers Decimal either
+    postgresql-simple refined resource-pool servant-server stm text
+    transformers wai wai-extra warp
   ];
   executableHaskellDepends = [
     aeson async base postgresql-simple servant-server wai warp yaml

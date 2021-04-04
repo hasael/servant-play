@@ -25,3 +25,4 @@ data/
 data-test/
 stack.yaml.lock
 result/
+.log
