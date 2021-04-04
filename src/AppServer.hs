@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module AppServer
   ( app,
@@ -17,7 +18,8 @@ import Network.Wai
 import Servant
 import TransactionService
 import Control.Monad.Trans.Reader
-
+import Colog
+import GHC.Stack
 
 type AppHandler = ReaderT AppState Handler
 
@@ -49,7 +51,13 @@ server connectionsPool =
     :<|> getVersion
 
 fetchUsers :: DbRepository IO a => a -> AppHandler [User]
-fetchUsers conn = liftIO $ getAllUsers conn
+fetchUsers conn = do 
+  let logFileName = "haskell-servant.log" 
+  liftIO $ withLogTextFile logFileName (\l -> unLogAction l $ fmtMessage $ Msg I callStack "haskell log test - getting users")
+  liftIO $ getAllUsers conn 
+
+mylog :: IO ()
+mylog = unLogAction logStringStdout  "aaa" 
 
 fetchUser :: DbRepository IO a => a -> UserId -> AppHandler User
 fetchUser conn userId = liftIO (getUserById conn userId) >>= notFoundResponse
