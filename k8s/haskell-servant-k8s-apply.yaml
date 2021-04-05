@@ -35,3 +35,4 @@ spec:
   selector:
     app: haskell-servant
   type: LoadBalancer
+
