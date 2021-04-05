@@ -10,6 +10,7 @@ import AppAPI
 import Control.Concurrent
 import Control.Monad (void)
 import Control.Monad.IO.Class (MonadIO (liftIO))
+import Control.Monad.Trans.Reader
 import DbRepository
 import GCounter
 import Instances
@@ -17,9 +18,6 @@ import Models
 import Network.Wai
 import Servant
 import TransactionService
-import Control.Monad.Trans.Reader
-import Colog
-import GHC.Stack
 
 type AppHandler = ReaderT AppState Handler
 
@@ -51,13 +49,7 @@ server connectionsPool =
     :<|> getVersion
 
 fetchUsers :: DbRepository IO a => a -> AppHandler [User]
-fetchUsers conn = do 
-  let logFileName = "haskell-servant.log" 
-  liftIO $ withLogTextFile logFileName (\l -> unLogAction l $ fmtMessage $ Msg I callStack "haskell log test - getting users")
-  liftIO $ getAllUsers conn 
-
-mylog :: IO ()
-mylog = unLogAction logStringStdout  "aaa" 
+fetchUsers conn = liftIO $ getAllUsers conn
 
 fetchUser :: DbRepository IO a => a -> UserId -> AppHandler User
 fetchUser conn userId = liftIO (getUserById conn userId) >>= notFoundResponse

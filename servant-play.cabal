@@ -43,7 +43,6 @@ library
       src
   build-depends:
       aeson
-    , co-log
     , refined
     , either
     , base
