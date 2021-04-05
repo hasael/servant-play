@@ -10,7 +10,7 @@ import Data.Maybe
 import Data.Monoid
 import Data.Ord
 import System.IO.Unsafe
-import Prelude as P (IO, Int, Show, foldr, fromInteger, print, putStrLn, show, ($), (+), (.))
+import Prelude as P (IO, Int, foldr, fromInteger, print, putStrLn, show, ($), (+), (.))
 
 class (Monoid m, Ord a) => GCounter m a where
 

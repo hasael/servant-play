@@ -18,7 +18,7 @@ import Models
 merge_ :: (DbRepository IO a) => a -> AppState -> IO ()
 merge_ conn state = do
   result <- merge state
-  print result
+  print $ "Merge result: " ++ show result
   updateTrxData conn result
 
 start_ :: (DbRepository IO a) => a -> AppState -> IO ()
