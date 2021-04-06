@@ -75,13 +75,14 @@ jobs:
         ls -all k8s/
         pwd
     - name: AWS S3 Sync Action
-      uses: awact/s3-action@0.1.1
+      uses: raulanatol/aws-s3-docker-action@v1.0
       with:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_ACCESS_KEY }}
-        AWS_S3_BUCKET: ${{ secrets.K8S_STATE_BUCKET }}
+        AWS_BUCKET_NAME: ${{ secrets.K8S_STATE_BUCKET }}
         AWS_REGION: eu-west-1
-        SOURCE_DIR: k8s/
+        SOURCE: k8s/
+        TARGET: ""
         
 #    - name: Upload to S3
 #      uses: wixplosives/action-upload-to-s3@v10
