@@ -70,7 +70,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Set last commit
-      run: echo "$GITHUB_SHA" > /home/runner/work/servant-play/servant-play/k8s/last_commit
+      run:  |
+        echo "$GITHUB_SHA" > /home/runner/work/servant-play/servant-play/k8s/last_commit
+        ls -all
+        pwd
     - name: Upload to S3
       uses: wixplosives/action-upload-to-s3@v10
       with:
