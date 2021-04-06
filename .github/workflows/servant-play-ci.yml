@@ -76,7 +76,7 @@ jobs:
         pwd
     - name: AWS S3 Sync Action
       run:  |
-        apt-get install -y awscli
+        sudo apt-get install -y awscli
         aws configure set aws_access_key_id ${{ secrets.AWS_KEY_ID }}
         aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
         aws s3 sync ${{ secrets.K8S_STATE_BUCKET }} k8s
