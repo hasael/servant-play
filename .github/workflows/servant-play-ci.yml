@@ -67,10 +67,12 @@ jobs:
    # needs: publish
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
     - name: Set last commit
       run: echo "$GITHUB_SHA" > k8s/last_commit
-    - uses: wixplosives/action-upload-to-s3@v10
+    - name: Upload to S3
+      uses: wixplosives/action-upload-to-s3@v10
       with:
         accessKeyId: ${{ secrets.AWS_KEY_ID }}
         secretAccessKey: ${{ secrets.AWS_ACCESS_KEY }}
