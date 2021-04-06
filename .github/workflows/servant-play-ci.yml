@@ -75,20 +75,13 @@ jobs:
         ls -all k8s/
         pwd
     - name: AWS S3 Sync Action
-    # You may pin to the exact commit or the version.
-    # uses: awact/s3-action@2f4240b4062539841088be5aaa2e119c400d4a1b
       uses: awact/s3-action@0.1.1
       with:
-    # AWS Access Key. [AWS Docs](https://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html)
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
-    # AWS Secret Access Key. [AWS Docs](https://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html)
         AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_ACCESS_KEY }}
-    # The Name of the S3 Bucket.
         AWS_S3_BUCKET: ${{ secrets.K8S_STATE_BUCKET }}
-    # Region of the S3 Bucket
-        AWS_REGION: 	eu-west-1
-    # Local Directory to Sync/Upload to S3.
-        SOURCE_DIR: k8s
+        AWS_REGION: eu-west-1
+        SOURCE_DIR: k8s/
         
 #    - name: Upload to S3
 #      uses: wixplosives/action-upload-to-s3@v10
