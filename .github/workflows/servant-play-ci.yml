@@ -64,7 +64,7 @@ jobs:
         push: true
         tags: elmanhasa/haskell-servant:latest
   deploy:
-   # needs: publish
+    needs: publish
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -81,13 +81,3 @@ jobs:
         aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
         aws configure set region eu-west-1
         aws s3 sync ./k8s/ ${{ secrets.K8S_STATE_BUCKET }}
-
-#    - name: Upload to S3
-#      uses: wixplosives/action-upload-to-s3@v10
-#      with:
-#        accessKeyId: ${{ secrets.AWS_KEY_ID }}
-#        secretAccessKey: ${{ secrets.AWS_ACCESS_KEY }}
-#        awsBucket: ${{ secrets.K8S_STATE_BUCKET }}
-#        sourceFolder: k8s
-#        s3Subfolder: ""
-#        tags: "from=github"
