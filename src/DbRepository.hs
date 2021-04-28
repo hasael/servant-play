@@ -1,10 +1,18 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE ImplicitParams #-}
 
 module DbRepository where
 
-import Models (Amount, Transaction, TransactionId, User, UserId)
+import Models (Amount, Transaction (userId), TransactionId, User, UserId)
+import Control.Monad.Reader
 
 class Monad m => DbRepository m a where
+
   getUserAmount :: a -> UserId -> m (Maybe Amount)
 
   updateUserAmount :: a -> UserId -> Amount -> m ()
@@ -24,3 +32,6 @@ class Monad m => DbRepository m a where
   insertCreditTransaction :: a -> UserId -> Amount -> m (Maybe Transaction)
 
   insertDebitTransaction :: a -> UserId -> Amount -> m (Maybe Transaction)
+
+
+

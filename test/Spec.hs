@@ -18,6 +18,7 @@ import GHC.Float
 import GHC.Int (Int64)
 import Lib (app, merge_, newState)
 import InMemoryDb
+import RealDb
 import Models
 import MonoidProperties
 import Network.HTTP.Types
@@ -54,32 +55,22 @@ main = do
     then do
       pool <- initTestDbConnection "host=localhost port=5437 dbname=postgres user=postgres password=playground"
       cleanTables pool
-      withArgs (delete "real" as) $ runTests pool state
+      let env = Env state pool
+      withArgs (delete "real" as) $ runTests env
+      hspec $ dbSpec pool
     else do
       db <- newDB
-      runTests db state
+      let env = InMemEnv state db
+      runTests env
+      hspec $ dbSpec db
 
-runTests :: DbRepository IO a => a -> AppState -> IO ()
-runTests c state = do
-  let myapp = app c state
+runTests :: (DbRepository IO env, DbRepository (MyHandler env) env, DbRepository (EnvHandler env) env, HasAppState env) => env -> IO ()
+runTests env = do
+  let myapp = app env
   hspec $ do
     apiSpec myapp
-    concurrencySpecs c state myapp
-    describe "DbRepository" $ do
-      it "can create user" $
-        property $ monadicPropIO . prop_insert_any_user c
-      it "creates and reads a user" $
-        property $ monadicPropIO . prop_user_read_after_insert c
-      it "reads user idempotently" $
-        property $ monadicPropIO . prop_user_idempotent_read c
-      --      it "updates user correctly" $
-      --        property $ \u a -> monadicPropIO $ prop_user_correct_amount_after_update c u a
-      it "can create transaction" $
-        quickCheck $ withMaxSuccess 1000 $ property $ \u a -> monadicPropIO $ prop_transaction_insert_any c u a
-      it "creates and reads a transaction" $
-        property $ \u a -> monadicPropIO $ prop_transaction_read_after_insert c u a
-      it "reads transaction idempotently" $
-        property $ \u a -> monadicPropIO $ prop_transaction_idempotent_read c u a
+    concurrencySpecs env myapp
+    dbSpec env
     describe "TransactionAmount is a monoid" $ do
       it "Associative" $
         quickCheck $ withMaxSuccess 1000 (prop_MonoidAssociativity :: TransactionAmount -> TransactionAmount -> TransactionAmount -> Bool)
@@ -206,8 +197,8 @@ apiSpec app = with (return app) $ do
       liftIO $ userAmount firstUserResp `shouldBe` creditAmount
       liftIO $ userAmount secondUserResp `shouldBe` creditAmount - debitAmount
 
-concurrencySpecs :: DbRepository IO a => a -> AppState -> Application -> Spec
-concurrencySpecs conn state app = with (return app) $ do
+concurrencySpecs :: (DbRepository (EnvHandler env) env, HasAppState env) => env -> Application -> Spec
+concurrencySpecs env app = with (return app) $ do
   describe "GET /user/ amount on concurrent calls" $ do
     it "response contains correct credit transaction" $ do
       let userToCreate = User (mkUserId 1) "Isaac" "Newton" 0
@@ -219,10 +210,27 @@ concurrencySpecs conn state app = with (return app) $ do
       let expectedAmount = int2Double concurrency * creditAmount
       liftIO $ concurrentCallsN (simplePost ("/trx/credit/" <> createdUserId <> "/" <> toByteString creditAmount)) app concurrency
       liftIO $ threadDelay 100000
-      liftIO $ merge_ conn state
+      liftIO $ merge_ env
       getUserResponse <- get ("/users/" <> createdUserId)
       let userResponse = decodeUser getUserResponse
       liftIO $ userAmount userResponse `shouldBe` expectedAmount
+
+dbSpec :: DbRepository IO env => env -> Spec
+dbSpec c = describe "DbRepository" $ do
+      it "can create user" $
+        property $ monadicPropIO . prop_insert_any_user c
+      it "creates and reads a user" $
+        property $ monadicPropIO . prop_user_read_after_insert c
+      it "reads user idempotently" $
+        property $ monadicPropIO . prop_user_idempotent_read c
+      --      it "updates user correctly" $
+      --        property $ \u a -> monadicPropIO $ prop_user_correct_amount_after_update c u a
+      it "can create transaction" $
+        quickCheck $ withMaxSuccess 1000 $ property $ \u a -> monadicPropIO $ prop_transaction_insert_any c u a
+      it "creates and reads a transaction" $
+        property $ \u a -> monadicPropIO $ prop_transaction_read_after_insert c u a
+      it "reads transaction idempotently" $
+        property $ \u a -> monadicPropIO $ prop_transaction_idempotent_read c u a
 
 postJson :: B.ByteString -> LB.ByteString -> WaiSession st SResponse
 postJson path = request methodPost path [("Content-Type", "application/json")]

@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
-
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module RealTestDb where
 
 import Data.Pool
@@ -8,9 +9,12 @@ import RealDb
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import TestBase
+import Models
+import Control.Monad.Reader  
 
 instance CanPropertyTest IO where
   toProperty = ioProperty
+
 
 monadicPropIO :: PropertyM IO () -> Property
 monadicPropIO = monadic toProperty

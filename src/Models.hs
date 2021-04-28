@@ -4,13 +4,14 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
+
 module Models where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Decimal
 import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField
-import GHC.Base (Double, Eq, Int, Ord, String, undefined, error)
+import GHC.Base (Double, Eq, Int, Ord, String, undefined, error, IO)
 import GHC.Float.ConversionUtils
 import GHC.Generics
 import GHC.Show 
@@ -22,6 +23,7 @@ import Refined
 import Data.Either
 import Data.Either.Combinators (mapLeft)
 import qualified Data.Text as T
+import Control.Monad.Reader  
 
 instance FromJSON Transaction
 
@@ -35,6 +37,8 @@ instance ToJSON Transaction
 
 instance ToJSON TransactionType
 
+class HasAppState a where
+  getAppState :: a -> AppState
 
 data TransactionType = Debit | Credit
   deriving (Eq, Show, Generic)
@@ -103,3 +107,7 @@ data TransactionAmount = TransactionAmount
 
 instance Eq TransactionAmount where
   a == b = calculatedTransactionAmount a == calculatedTransactionAmount b
+
+type MyHandler env = ReaderT env Handler
+
+type EnvHandler env = ReaderT env IO

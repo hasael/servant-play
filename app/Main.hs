@@ -15,7 +15,7 @@ import Models
 import System.Environment
 
 main :: IO ()
-main = do
+main = do 
   args <- getArgs
   print $ "Args: " ++ show args
   state <- newState
@@ -29,8 +29,9 @@ main = do
 startInMemory :: AppState -> IO ()
 startInMemory state = do
   db <- newDB 
-  startAligner db state
-  concurrently_ (startApp 8080 $ app db state) (scheduled db state 4000000)
+  let env = InMemEnv state db
+  startAligner env
+  concurrently_ (startApp 8080 $ app env) (scheduled env 4000000)
 
 
 startReal :: FilePath -> AppState -> IO ()
@@ -38,11 +39,16 @@ startReal config state = do
   config <- readConfig config
   connectionsPool <- initConnection $ (connectionString . db) config
   initDb connectionsPool
-  startAligner connectionsPool state
-  concurrently_ (startApp 8080 $ app connectionsPool state) (scheduled connectionsPool state 4000000)
+  let env = Env state connectionsPool
+  startAligner env
+  concurrently_ (startApp 8080 $ app env) (scheduledR env 4000000)
 
-scheduled :: (DbRepository IO a) => a -> AppState -> Int -> IO ()
-scheduled conn state delay = threadDelay delay >> merge_ conn state >> scheduled conn state delay
+
+scheduled :: InMemEnv -> Int -> IO ()
+scheduled env delay = threadDelay delay >> merge_ env >> scheduled env delay
+
+scheduledR :: Env -> Int -> IO ()
+scheduledR env delay = threadDelay delay >> merge_ env >> scheduledR env delay
 
 readConfig :: FilePath -> IO AppConfig
 readConfig = decodeFileThrow

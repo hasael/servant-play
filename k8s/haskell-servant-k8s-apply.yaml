@@ -20,19 +20,3 @@ spec:
         - name: http
           containerPort: 8080
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: haskell-servant
-  labels:
-    app: haskell-servant-service
-spec:
-  ports:
-  - name: http
-    port: 8080
-    targetPort: http
-  selector:
-    app: haskell-servant
-  type: LoadBalancer
-

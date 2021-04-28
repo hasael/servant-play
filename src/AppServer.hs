@@ -2,7 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module AppServer
-  ( app,
+  ( server,
+    api,
   )
 where
 
@@ -10,7 +11,8 @@ import AppAPI
 import Control.Concurrent
 import Control.Monad (void)
 import Control.Monad.IO.Class (MonadIO (liftIO))
-import Control.Monad.Trans.Reader
+import Control.Monad.Error.Class
+import Control.Monad.Reader
 import DbRepository
 import GCounter
 import Instances
@@ -18,76 +20,82 @@ import Models
 import Network.Wai
 import Servant
 import TransactionService
-
-type AppHandler = ReaderT AppState Handler
+  ( CreditOpResult (CorrectCredit, CreditUserNotFound),
+    DebitOpResult (CorrectDebit, DebitUserNotFound, IncorrectAmount),
+    createCreditTransaction,
+    createDebitTransaction,
+  )
 
 api :: Proxy API
 api = Proxy
 
-nt :: AppState -> AppHandler a -> Handler a
-nt s x = runReaderT x s
 
-app :: (DbRepository IO a) => a -> AppState -> Application
-app connectionsPool state = serve api $ hoistServer api (nt state) $ server connectionsPool
+userServer :: (DbRepository m env, MonadReader env m, MonadIO m, MonadError ServerError m) => ServerT UserAPI m
+userServer =
+  fetchUsers
+    :<|> fetchUser
+    :<|> createUser
 
-userServer :: (DbRepository IO a) => a -> ServerT UserAPI AppHandler
-userServer connectionsPool =
-  fetchUsers connectionsPool
-    :<|> fetchUser connectionsPool
-    :<|> createUser connectionsPool
+transactionsServer :: (DbRepository m env, MonadReader env m, MonadIO m, HasAppState env, MonadError ServerError m) => ServerT TransactionsAPI m
+transactionsServer =
+  fetchTransactions
+    :<|> addCreditTransaction
+    :<|> addDebitTransaction
 
-transactionsServer :: (DbRepository IO a) => a -> ServerT TransactionsAPI AppHandler
-transactionsServer connectionsPool =
-  fetchTransactions connectionsPool
-    :<|> addCreditTransaction connectionsPool
-    :<|> addDebitTransaction connectionsPool
-
-server :: (DbRepository IO a) => a -> ServerT API AppHandler
-server connectionsPool =
-  userServer connectionsPool
-    :<|> transactionsServer connectionsPool
+server :: (DbRepository m env, MonadReader env m, MonadIO m, HasAppState env, MonadError ServerError m) => ServerT API m
+server =
+  userServer
+    :<|> transactionsServer
     :<|> getVersion
 
-fetchUsers :: DbRepository IO a => a -> AppHandler [User]
-fetchUsers conn = liftIO $ getAllUsers conn
+fetchUsers :: (DbRepository m env, MonadReader env m) => m [User]
+fetchUsers = do
+  env <- ask
+  getAllUsers env
 
-fetchUser :: DbRepository IO a => a -> UserId -> AppHandler User
-fetchUser conn userId = liftIO (getUserById conn userId) >>= notFoundResponse
+fetchUser :: (DbRepository m env, MonadReader env m, MonadError ServerError m) => UserId -> m User
+fetchUser userId = do
+  env <- ask
+  getUserById env userId >>= notFoundResponse
 
-createUser :: DbRepository IO a => a -> User -> AppHandler User
-createUser conn user = do
-  mu <- liftIO $ insertUser conn user
+createUser :: (DbRepository m env, MonadReader env m, MonadError ServerError m) => User -> m User
+createUser user = do
+  env <- ask
+  mu <- insertUser env user
   case mu of
     Just u -> return u
     Nothing -> throwError err404
 
-fetchTransactions :: DbRepository IO a => a -> UserId -> AppHandler [Transaction]
-fetchTransactions conn userId = do
-  users <- liftIO $ getTransactions conn userId
+fetchTransactions :: (DbRepository m env, MonadReader env m, MonadError ServerError m) => UserId -> m [Transaction]
+fetchTransactions userId = do
+  env <- ask
+  users <- getTransactions env userId
   case users of
     [] -> throwError err404
     a -> return a
 
-addCreditTransaction :: (DbRepository IO a) => a -> UserId -> Amount -> AppHandler Transaction
-addCreditTransaction conn userId amount = do
-  result <- liftIO $ createCreditTransaction conn userId amount
-  state <- ask
+addCreditTransaction :: (DbRepository m env, MonadReader env m, MonadIO m, HasAppState env, MonadError ServerError m) => UserId -> Amount -> m Transaction
+addCreditTransaction userId amount = do
+  env <- ask
+  result <- createCreditTransaction env userId amount
+  let state = getAppState env
   case result of
     CreditUserNotFound -> throwError err404
     CorrectCredit t -> liftIO $ forkIO (void (increment state userId $ trxAmount t)) >> return t
 
-addDebitTransaction :: (DbRepository IO a) => a -> UserId -> Amount -> AppHandler Transaction
-addDebitTransaction conn userId amount = do
-  result <- liftIO $ createDebitTransaction conn userId amount
-  state <- ask
+addDebitTransaction :: (DbRepository m env, MonadReader env m, HasAppState env, MonadIO m, MonadError ServerError m) => UserId -> Amount -> m Transaction
+addDebitTransaction userId amount = do
+  env <- ask
+  result <- createDebitTransaction env userId amount
+  let state = getAppState env
   case result of
     DebitUserNotFound -> throwError err404
     IncorrectAmount -> throwError err403
     CorrectDebit t -> liftIO $ forkIO (void (increment state userId $ trxAmount t)) >> return t
 
-getVersion :: AppHandler String
+getVersion :: Monad m => m String
 getVersion = return "0.1.0.4"
 
-notFoundResponse :: Maybe a -> AppHandler a
+notFoundResponse :: (Monad m, MonadError ServerError m) => Maybe a -> m a
 notFoundResponse Nothing = throwError err404
 notFoundResponse (Just r) = return r

@@ -1,4 +1,4 @@
-cabal-version: 1.12
+cabal-version: 3.0
 
 -- This file has been generated from package.yaml by hpack version 0.33.0.
 --
@@ -14,7 +14,7 @@ bug-reports:    https://github.com/hasael/servant-play/issues
 author:         hasael
 maintainer:     hasael
 copyright:      2021 hasael
-license:        BSD3
+license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
@@ -52,6 +52,7 @@ library
     , servant-server
     , postgresql-simple
     , resource-pool
+    , mtl
     , bytestring
     , wai-extra
     , wai
@@ -114,4 +115,5 @@ test-suite servant-play-test
     , postgresql-simple
     , resource-pool
     , refined
+    , mtl
   default-language: Haskell2010

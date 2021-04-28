@@ -3,8 +3,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-
-module InMemoryDb(newDB) where
+{-# LANGUAGE UndecidableInstances #-}
+module InMemoryDb(newDB,InMemEnv(InMemEnv)) where
 
 import Control.Concurrent.STM
 import Control.Monad
@@ -12,14 +12,14 @@ import Data.Functor.Identity
 import Data.Map
 import Data.Maybe
 import DbRepository
-import GHC.IO
+import GHC.IO(IO)
 import GHC.Show
 import Models
 import System.IO.Unsafe
 import Prelude (fst, print, snd, ($), (+), (++), (<$>), (==), Int, error)
 import Refined
 import Data.Either
-
+import Control.Monad.IO.Class
 newDB :: IO AppDatabase
 newDB = do
   a <- newTVarIO empty
@@ -112,3 +112,75 @@ withId user userId = User userId (name user) (lastName user) ((amount :: User ->
 
 withAmount ::  Amount -> User -> User
 withAmount amount user = User (getUserId user) (name user) (lastName user) amount
+
+data InMemEnv = InMemEnv {
+  crdtState :: AppState,
+  connectionsPool :: AppDatabase
+}
+
+instance HasAppState InMemEnv where
+  getAppState = crdtState
+
+instance (DbRepository IO AppDatabase) => DbRepository (MyHandler InMemEnv) InMemEnv where
+  getUserAmount env userId = liftIO $ getUserAmount (connectionsPool env) userId
+
+  updateUserAmount env userId amount = liftIO $ updateUserAmount (connectionsPool env) userId amount
+
+  getAllUsers env = liftIO $ getAllUsers (connectionsPool env)
+
+  getUserById env userId = liftIO $ getUserById (connectionsPool env) userId
+
+  insertUser env user = liftIO $ insertUser (connectionsPool env) user
+
+  getTransactionById env transactionId = liftIO $ getTransactionById (connectionsPool env) transactionId
+
+  getTransactions env userId = liftIO $ getTransactions (connectionsPool env) userId
+
+  getAllTransactions env = liftIO $ getAllTransactions (connectionsPool env)
+
+  insertCreditTransaction env userId amount = liftIO $ insertCreditTransaction (connectionsPool env) userId amount
+
+  insertDebitTransaction env userId amount = liftIO $ insertDebitTransaction (connectionsPool env) userId amount
+
+instance (DbRepository IO AppDatabase) => DbRepository (EnvHandler InMemEnv) InMemEnv where
+  getUserAmount env userId = liftIO $ getUserAmount (connectionsPool env) userId
+
+  updateUserAmount env userId amount = liftIO $ updateUserAmount (connectionsPool env) userId amount
+
+  getAllUsers env = liftIO $ getAllUsers (connectionsPool env)
+
+  getUserById env userId = liftIO $ getUserById (connectionsPool env) userId
+
+  insertUser env user = liftIO $ insertUser (connectionsPool env) user
+
+  getTransactionById env transactionId = liftIO $ getTransactionById (connectionsPool env) transactionId
+
+  getTransactions env userId = liftIO $ getTransactions (connectionsPool env) userId
+
+  getAllTransactions env = liftIO $ getAllTransactions (connectionsPool env)
+
+  insertCreditTransaction env userId amount = liftIO $ insertCreditTransaction (connectionsPool env) userId amount
+
+  insertDebitTransaction env userId amount = liftIO $ insertDebitTransaction (connectionsPool env) userId amount
+
+
+instance (DbRepository IO AppDatabase) => DbRepository IO InMemEnv where
+  getUserAmount env userId = getUserAmount (connectionsPool env) userId
+
+  updateUserAmount env userId amount = updateUserAmount (connectionsPool env) userId amount
+
+  getAllUsers env = getAllUsers (connectionsPool env)
+
+  getUserById env userId = getUserById (connectionsPool env) userId
+
+  insertUser env user = insertUser (connectionsPool env) user
+
+  getTransactionById env transactionId = getTransactionById (connectionsPool env) transactionId
+
+  getTransactions env userId = getTransactions (connectionsPool env) userId
+
+  getAllTransactions env = getAllTransactions (connectionsPool env)
+
+  insertCreditTransaction env userId amount = insertCreditTransaction (connectionsPool env) userId amount
+
+  insertDebitTransaction env userId amount = insertDebitTransaction (connectionsPool env) userId amount
