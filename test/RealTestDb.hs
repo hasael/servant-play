@@ -5,11 +5,11 @@ module RealTestDb where
 
 import Data.Pool
 import Database.PostgreSQL.Simple
-import RealDb
+import Impl.RealDb
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import TestBase
-import Models
+import Domain.Models
 import Control.Monad.Reader  
 
 instance CanPropertyTest IO where

@@ -5,10 +5,10 @@
 module DBProperties where
 
 import Data.Maybe (fromJust, fromMaybe, isJust)
-import DbRepository
+import Domain.DbRepository
 import GHC.Generics
 import Generic.Random
-import Models
+import Domain.Models
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import TestBase

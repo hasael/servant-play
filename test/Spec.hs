@@ -12,14 +12,14 @@ import qualified Data.ByteString.Char8 as B (ByteString)
 import Data.ByteString.Lazy (toStrict)
 import qualified Data.ByteString.Lazy as LB (ByteString)
 import Data.List (delete)
-import DbRepository
+import Domain.DbRepository
 import GHC.Conc.IO
 import GHC.Float
 import GHC.Int (Int64)
 import Lib (app, merge_, newState)
-import InMemoryDb
-import RealDb
-import Models
+import Impl.InMemoryDb
+import Impl.RealDb
+import Domain.Models
 import MonoidProperties
 import Network.HTTP.Types
 import Network.Wai

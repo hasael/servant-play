@@ -7,7 +7,7 @@ import Data.Aeson
 import Data.ByteString.Char8 as B (ByteString, pack, unpack)
 import Data.ByteString.Lazy as L (ByteString, toStrict)
 import Data.Maybe (fromJust)
-import Models
+import Domain.Models
 import Network.Wai.Test
 import Test.QuickCheck (Property)
 import Test.QuickCheck.Monadic

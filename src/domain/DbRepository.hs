@@ -6,9 +6,9 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ImplicitParams #-}
 
-module DbRepository where
+module Domain.DbRepository where
 
-import Models (Amount, Transaction (userId), TransactionId, User, UserId)
+import Domain.Models (Amount, Transaction (userId), TransactionId, User, UserId)
 import Control.Monad.Reader
 
 class Monad m => DbRepository m a where

@@ -1,25 +1,25 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module AppServer
+module Api.Server
   ( server,
     api,
   )
 where
 
-import AppAPI
+import Api.AppAPI
 import Control.Concurrent
 import Control.Monad (void)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Error.Class
 import Control.Monad.Reader
-import DbRepository
-import GCounter
-import Instances
-import Models
+import Domain.DbRepository
+import Domain.GCounter
+import Impl.GCounter
+import Domain.Models
 import Network.Wai
 import Servant
-import TransactionService
+import Domain.TransactionService
   ( CreditOpResult (CorrectCredit, CreditUserNotFound),
     DebitOpResult (CorrectDebit, DebitUserNotFound, IncorrectAmount),
     createCreditTransaction,

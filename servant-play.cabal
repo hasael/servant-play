@@ -27,18 +27,18 @@ source-repository head
 library
   exposed-modules:
       Lib,
-      RealDb,
-      InMemoryDb,
-      DbRepository,
-      Models
+      Impl.RealDb,
+      Impl.InMemoryDb,
+      Domain.DbRepository,
+      Domain.Models
   other-modules:
       Paths_servant_play,
-      AppAPI,
-      AppServer,
+      Api.AppAPI,
+      Api.Server,
       Aligner,
-      TransactionService,
-      Instances,
-      GCounter
+      Domain.TransactionService,
+      Impl.GCounter,
+      Domain.GCounter
   hs-source-dirs:
       src
   build-depends:

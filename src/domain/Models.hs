@@ -5,7 +5,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 
-module Models where
+module Domain.Models where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Decimal

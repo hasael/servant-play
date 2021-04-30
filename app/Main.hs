@@ -7,11 +7,11 @@ import AppConfig
 import Control.Concurrent
 import Control.Concurrent.Async
 import Data.Yaml
-import DbRepository
+import Domain.DbRepository
 import Lib
-import RealDb
-import InMemoryDb
-import Models
+import Impl.RealDb
+import Impl.InMemoryDb
+import Domain.Models
 import System.Environment
 
 main :: IO ()

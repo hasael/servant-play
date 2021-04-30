@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module GCounter where
+module Domain.GCounter where
 
 import Control.Concurrent.STM
 import Control.Monad

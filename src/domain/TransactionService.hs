@@ -1,9 +1,9 @@
-module TransactionService where
+module Domain.TransactionService where
 
 import Control.Monad (void)
 import Database.PostgreSQL.Simple (Connection)
-import DbRepository
-import Models
+import Domain.DbRepository
+import Domain.Models
 
 data DebitOpResult = CorrectDebit Transaction | DebitUserNotFound | IncorrectAmount
 

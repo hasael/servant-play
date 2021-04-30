@@ -1,9 +1,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Instances where
+module Impl.GCounter where
 
-import GCounter
-import Models
+import Domain.GCounter
+import Domain.Models
 import Data.Ratio
 import Data.Decimal
 

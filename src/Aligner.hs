@@ -8,15 +8,14 @@ where
 
 import Control.Monad (void)
 import Data.Map 
-import DbRepository
+import Domain.DbRepository
   ( DbRepository (getAllTransactions, updateUserAmount),
   )
-import GCounter
-import Instances
-import Models 
+import Domain.GCounter
+import Domain.Models 
 import Control.Monad.Reader
 
-merge_ :: (DbRepository m env, MonadReader env m, HasAppState env, MonadIO m) => m ()
+merge_ :: (DbRepository m env, GCounter TransactionAmount UserId, MonadReader env m, HasAppState env, MonadIO m) => m ()
 merge_ = do
   env <- ask
   let state = getAppState env
@@ -24,7 +23,7 @@ merge_ = do
   liftIO $ print $ "Merge result: " ++ show result
   updateTrxData env result
 
-start_ :: (DbRepository m env, MonadReader env m, HasAppState env, MonadIO m) => m ()
+start_ :: (DbRepository m env, GCounter TransactionAmount UserId, MonadReader env m, HasAppState env, MonadIO m) => m ()
 start_ = do
   env <- ask
   let state = getAppState env

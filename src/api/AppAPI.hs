@@ -1,9 +1,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
-module AppAPI where
+module Api.AppAPI where
 
-import Models
+import Domain.Models
 import Servant
 
 type UserAPI =

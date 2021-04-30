@@ -14,12 +14,12 @@ module Lib
 where
 
 import qualified Aligner as A
-import qualified AppServer as S
-import DbRepository 
+import qualified Api.Server as S
+import Domain.DbRepository 
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Models ( AppState, EnvHandler, Transaction (userId), HasAppState, MyHandler )
+import Domain.Models ( AppState, EnvHandler, Transaction (userId), HasAppState, MyHandler )
 import Control.Concurrent.STM
 import Data.Map
 import Control.Monad.Trans.Reader as R ( ReaderT(runReaderT), ask )

@@ -4,17 +4,18 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE UndecidableInstances #-}
-module InMemoryDb(newDB,InMemEnv(InMemEnv)) where
+
+module Impl.InMemoryDb(newDB,InMemEnv(InMemEnv)) where
 
 import Control.Concurrent.STM
 import Control.Monad
 import Data.Functor.Identity
 import Data.Map
 import Data.Maybe
-import DbRepository
+import Domain.DbRepository
 import GHC.IO(IO)
 import GHC.Show
-import Models
+import Domain.Models
 import System.IO.Unsafe
 import Prelude (fst, print, snd, ($), (+), (++), (<$>), (==), Int, error)
 import Refined

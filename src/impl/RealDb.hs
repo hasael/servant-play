@@ -4,15 +4,15 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module RealDb where
+module Impl.RealDb where
 
 import Control.Monad (void)
 import Data.ByteString.Char8
 import Data.Pool
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromField (FromField, fromField)
-import DbRepository
-import Models
+import Domain.DbRepository
+import Domain.Models
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
 
 initDb :: Pool Connection -> IO ()
