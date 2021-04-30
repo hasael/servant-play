@@ -8,7 +8,9 @@ import Data.Maybe (fromJust, fromMaybe, isJust)
 import Domain.DbRepository
 import GHC.Generics
 import Generic.Random
-import Domain.Models
+import Domain.Transaction
+import Domain.User
+import Domain.Helper
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import TestBase

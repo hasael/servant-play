@@ -8,7 +8,9 @@
 
 module Domain.DbRepository where
 
-import Domain.Models (Amount, Transaction (userId), TransactionId, User, UserId)
+import Domain.User
+import Domain.Transaction
+import Domain.Helper
 import Control.Monad.Reader
 
 class Monad m => DbRepository m a where

@@ -19,7 +19,10 @@ import GHC.Int (Int64)
 import Lib (app, merge_, newState)
 import Impl.InMemoryDb
 import Impl.RealDb
-import Domain.Models
+import Domain.Transaction
+import Domain.User
+import Domain.Helper
+import Domain.AppState
 import MonoidProperties
 import Network.HTTP.Types
 import Network.Wai

@@ -19,7 +19,8 @@ import Domain.DbRepository
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Domain.Models ( AppState, EnvHandler, Transaction (userId), HasAppState, MyHandler )
+import Domain.AppState
+import Domain.Transaction
 import Control.Concurrent.STM
 import Data.Map
 import Control.Monad.Trans.Reader as R ( ReaderT(runReaderT), ask )

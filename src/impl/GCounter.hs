@@ -3,7 +3,8 @@
 module Impl.GCounter where
 
 import Domain.GCounter
-import Domain.Models
+import Domain.Transaction
+import Domain.User
 import Data.Ratio
 import Data.Decimal
 

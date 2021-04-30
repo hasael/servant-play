@@ -3,7 +3,9 @@
 
 module Api.AppAPI where
 
-import Domain.Models
+import Domain.User
+import Domain.Helper
+import Domain.Transaction
 import Servant
 
 type UserAPI =

@@ -30,7 +30,10 @@ library
       Impl.RealDb,
       Impl.InMemoryDb,
       Domain.DbRepository,
-      Domain.Models
+      Domain.User,
+      Domain.Transaction,
+      Domain.Helper,
+      Domain.AppState
   other-modules:
       Paths_servant_play,
       Api.AppAPI,

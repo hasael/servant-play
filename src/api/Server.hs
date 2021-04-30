@@ -16,7 +16,10 @@ import Control.Monad.Reader
 import Domain.DbRepository
 import Domain.GCounter
 import Impl.GCounter
-import Domain.Models
+import Domain.Transaction
+import Domain.User
+import Domain.Helper
+import Domain.AppState
 import Network.Wai
 import Servant
 import Domain.TransactionService

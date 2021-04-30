@@ -12,7 +12,10 @@ import Data.Pool
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromField (FromField, fromField)
 import Domain.DbRepository
-import Domain.Models
+import Domain.User
+import Domain.Transaction
+import Domain.Helper
+import Domain.AppState
 import Control.Monad.IO.Class ( MonadIO(liftIO) )
 
 initDb :: Pool Connection -> IO ()
@@ -29,14 +32,6 @@ initConnection connStr =
     2 -- stripes
     60 --seconds to keep alive if unused
     10 --max 20 connection per stripe
-
-instance FromRow User
-
-instance FromField TransactionType where
-  fromField f (Just "Debit") = return Debit
-  fromField f _ = return Credit
-
-instance FromRow Transaction
 
 instance DbRepository IO (Pool Connection) where
   getUserAmount pool userId = withResource pool $ \conn -> do

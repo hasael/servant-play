@@ -15,12 +15,16 @@ import Data.Maybe
 import Domain.DbRepository
 import GHC.IO(IO)
 import GHC.Show
-import Domain.Models
+import Domain.User
+import Domain.Transaction
+import Domain.AppState
+import Domain.Helper
 import System.IO.Unsafe
 import Prelude (fst, print, snd, ($), (+), (++), (<$>), (==), Int, error)
 import Refined
 import Data.Either
 import Control.Monad.IO.Class
+
 newDB :: IO AppDatabase
 newDB = do
   a <- newTVarIO empty

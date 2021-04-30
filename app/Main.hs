@@ -11,7 +11,7 @@ import Domain.DbRepository
 import Lib
 import Impl.RealDb
 import Impl.InMemoryDb
-import Domain.Models
+import Domain.AppState
 import System.Environment
 
 main :: IO ()

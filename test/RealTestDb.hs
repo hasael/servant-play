@@ -9,7 +9,6 @@ import Impl.RealDb
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import TestBase
-import Domain.Models
 import Control.Monad.Reader  
 
 instance CanPropertyTest IO where

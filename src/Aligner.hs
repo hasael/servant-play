@@ -12,7 +12,9 @@ import Domain.DbRepository
   ( DbRepository (getAllTransactions, updateUserAmount),
   )
 import Domain.GCounter
-import Domain.Models 
+import Domain.Transaction 
+import Domain.User 
+import Domain.AppState 
 import Control.Monad.Reader
 
 merge_ :: (DbRepository m env, GCounter TransactionAmount UserId, MonadReader env m, HasAppState env, MonadIO m) => m ()
