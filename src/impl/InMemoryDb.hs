@@ -105,15 +105,6 @@ instance DbRepository IO AppDatabase where
       writeTVar (fst db) newValues
       return $ Just newTrx
 
-mkUserId :: Int -> UserId
-mkUserId id =  UserId $ fromRight (error "invalid userId") $ refine id
-
-withId :: User -> UserId -> User
-withId user userId = User userId (name user) (lastName user) ((amount :: User -> Amount) user)
-
-withAmount ::  Amount -> User -> User
-withAmount amount user = User (getUserId user) (name user) (lastName user) amount
-
 data InMemEnv = InMemEnv {
   crdtState :: AppState,
   connectionsPool :: AppDatabase

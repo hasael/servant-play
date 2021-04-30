@@ -9,7 +9,7 @@ module Domain.Models where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Decimal
-import Database.PostgreSQL.Simple.FromField
+import Database.PostgreSQL.Simple.FromField ( FromField(fromField) )
 import Database.PostgreSQL.Simple.ToField
 import GHC.Base (Double, Eq, Int, Ord, String, undefined, error, IO)
 import GHC.Float.ConversionUtils
@@ -98,6 +98,15 @@ getTransactionId = id
 calculatedTransactionAmount :: Integral i => TransactionAmount -> DecimalRaw i
 calculatedTransactionAmount (TransactionAmount amount Credit) = realFracToDecimal 2 amount
 calculatedTransactionAmount (TransactionAmount amount Debit) = realFracToDecimal 2 (- amount)
+
+mkUserId :: Int -> UserId
+mkUserId id =  UserId $ fromRight (error "invalid userId") $ refine id
+
+withId :: User -> UserId -> User
+withId user userId = User userId (name user) (lastName user) ((amount :: User -> Amount) user)
+
+withAmount ::  Amount -> User -> User
+withAmount amount user = User (getUserId user) (name user) (lastName user) amount
 
 data TransactionAmount = TransactionAmount
   { amount :: !Amount,
