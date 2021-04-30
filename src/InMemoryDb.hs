@@ -121,7 +121,7 @@ data InMemEnv = InMemEnv {
 instance HasAppState InMemEnv where
   getAppState = crdtState
 
-instance (DbRepository IO AppDatabase) => DbRepository (MyHandler InMemEnv) InMemEnv where
+instance (DbRepository IO AppDatabase, MonadIO m) => DbRepository m InMemEnv where
   getUserAmount env userId = liftIO $ getUserAmount (connectionsPool env) userId
 
   updateUserAmount env userId amount = liftIO $ updateUserAmount (connectionsPool env) userId amount
@@ -141,46 +141,3 @@ instance (DbRepository IO AppDatabase) => DbRepository (MyHandler InMemEnv) InMe
   insertCreditTransaction env userId amount = liftIO $ insertCreditTransaction (connectionsPool env) userId amount
 
   insertDebitTransaction env userId amount = liftIO $ insertDebitTransaction (connectionsPool env) userId amount
-
-instance (DbRepository IO AppDatabase) => DbRepository (EnvHandler InMemEnv) InMemEnv where
-  getUserAmount env userId = liftIO $ getUserAmount (connectionsPool env) userId
-
-  updateUserAmount env userId amount = liftIO $ updateUserAmount (connectionsPool env) userId amount
-
-  getAllUsers env = liftIO $ getAllUsers (connectionsPool env)
-
-  getUserById env userId = liftIO $ getUserById (connectionsPool env) userId
-
-  insertUser env user = liftIO $ insertUser (connectionsPool env) user
-
-  getTransactionById env transactionId = liftIO $ getTransactionById (connectionsPool env) transactionId
-
-  getTransactions env userId = liftIO $ getTransactions (connectionsPool env) userId
-
-  getAllTransactions env = liftIO $ getAllTransactions (connectionsPool env)
-
-  insertCreditTransaction env userId amount = liftIO $ insertCreditTransaction (connectionsPool env) userId amount
-
-  insertDebitTransaction env userId amount = liftIO $ insertDebitTransaction (connectionsPool env) userId amount
-
-
-instance (DbRepository IO AppDatabase) => DbRepository IO InMemEnv where
-  getUserAmount env userId = getUserAmount (connectionsPool env) userId
-
-  updateUserAmount env userId amount = updateUserAmount (connectionsPool env) userId amount
-
-  getAllUsers env = getAllUsers (connectionsPool env)
-
-  getUserById env userId = getUserById (connectionsPool env) userId
-
-  insertUser env user = insertUser (connectionsPool env) user
-
-  getTransactionById env transactionId = getTransactionById (connectionsPool env) transactionId
-
-  getTransactions env userId = getTransactions (connectionsPool env) userId
-
-  getAllTransactions env = getAllTransactions (connectionsPool env)
-
-  insertCreditTransaction env userId amount = insertCreditTransaction (connectionsPool env) userId amount
-
-  insertDebitTransaction env userId amount = insertDebitTransaction (connectionsPool env) userId amount
