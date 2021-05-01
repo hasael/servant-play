@@ -1,31 +1,22 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-
 
 module Domain.User where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Decimal
-import Database.PostgreSQL.Simple.FromField ( FromField(fromField) )
-import Database.PostgreSQL.Simple.ToField
-import Database.PostgreSQL.Simple
-import GHC.Base (Double, Eq, Int, Ord, String, undefined, error, IO)
-import GHC.Float.ConversionUtils
-import GHC.Generics
-import GHC.Show 
-import Data.Map
-import GHC.Conc.Sync
-import Servant
-import Prelude as P (Float, Fractional, Integral, Real (toRational), realToFrac, (&&), (+), (<), (==), (>) , ($), (<$>) ,(.))
-import Refined
 import Data.Either
-import Data.Either.Combinators (mapLeft)
-import qualified Data.Text as T
-import Control.Monad.Reader  
+import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.FromField (FromField (fromField))
+import Database.PostgreSQL.Simple.ToField
 import Domain.Helper
+import GHC.Base (Eq, Int, Ord, String, error)
+import GHC.Generics
+import GHC.Show
+import Refined
+import Servant
+import Prelude (($))
 
 instance FromJSON User
 
@@ -54,10 +45,10 @@ getUserId :: User -> UserId
 getUserId = id
 
 mkUserId :: Int -> UserId
-mkUserId id =  UserId $ fromRight (error "invalid userId") $ refine id
+mkUserId id = UserId $ fromRight (error "invalid userId") $ refine id
 
 withId :: User -> UserId -> User
 withId user userId = User userId (name user) (lastName user) ((amount :: User -> Amount) user)
 
-withAmount ::  Amount -> User -> User
+withAmount :: Amount -> User -> User
 withAmount amount user = User (getUserId user) (name user) (lastName user) amount

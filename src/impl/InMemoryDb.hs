@@ -1,29 +1,21 @@
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
-module Impl.InMemoryDb(newDB,InMemEnv(InMemEnv)) where
+module Impl.InMemoryDb (newDB, InMemEnv (InMemEnv)) where
 
 import Control.Concurrent.STM
 import Control.Monad
-import Data.Functor.Identity
+import Control.Monad.IO.Class
 import Data.Map
 import Data.Maybe
-import Domain.DbRepository
-import GHC.IO(IO)
-import GHC.Show
-import Domain.User
-import Domain.Transaction
 import Domain.AppState
-import Domain.Helper
-import System.IO.Unsafe
-import Prelude (fst, print, snd, ($), (+), (++), (<$>), (==), Int, error)
-import Refined
-import Data.Either
-import Control.Monad.IO.Class
+import Domain.DbRepository
+import Domain.Transaction
+import Domain.User
+import GHC.IO (IO)
+import Prelude (Int, error, fst, print, snd, ($), (+), (++), (<$>), (==))
 
 newDB :: IO AppDatabase
 newDB = do
@@ -109,10 +101,10 @@ instance DbRepository IO AppDatabase where
       writeTVar (fst db) newValues
       return $ Just newTrx
 
-data InMemEnv = InMemEnv {
-  crdtState :: AppState,
-  connectionsPool :: AppDatabase
-}
+data InMemEnv = InMemEnv
+  { crdtState :: AppState,
+    connectionsPool :: AppDatabase
+  }
 
 instance HasAppState InMemEnv where
   getAppState = crdtState

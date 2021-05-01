@@ -3,15 +3,15 @@ module Domain.TransactionService where
 import Control.Monad (void)
 import Database.PostgreSQL.Simple (Connection)
 import Domain.DbRepository
+import Domain.Helper (Amount)
 import Domain.Transaction
-import Domain.User
-import Domain.Helper
+import Domain.User (UserId)
 
 data DebitOpResult = CorrectDebit Transaction | DebitUserNotFound | IncorrectAmount
 
 data CreditOpResult = CorrectCredit Transaction | CreditUserNotFound
 
-createDebitTransaction :: DbRepository m a => a -> UserId -> Amount  -> m DebitOpResult
+createDebitTransaction :: DbRepository m a => a -> UserId -> Amount -> m DebitOpResult
 createDebitTransaction conn userId amount = do
   curramount <- getUserAmount conn userId
   let newAmount = (\a -> a - amount) <$> curramount
@@ -26,7 +26,7 @@ createDebitTransaction conn userId amount = do
         else return IncorrectAmount
     Nothing -> return DebitUserNotFound
 
-createCreditTransaction :: DbRepository m a => a -> UserId -> Amount  -> m CreditOpResult
+createCreditTransaction :: DbRepository m a => a -> UserId -> Amount -> m CreditOpResult
 createCreditTransaction conn userId amount = do
   curramount <- getUserAmount conn userId
   let newAmount = (+ amount) <$> curramount

@@ -8,12 +8,9 @@ import Control.Monad
 import Data.Map
 import Data.Maybe
 import Data.Monoid
-import Data.Ord
-import System.IO.Unsafe
-import Prelude as P (IO, Int, foldr, fromInteger, print, putStrLn, show, ($), (+), (.))
+import Prelude (IO, Ord, ($))
 
 class (Monoid m, Ord a) => GCounter m a where
-
   merge :: (GCounter m a) => TVar (Map a [m]) -> IO (Map a m)
   merge state = do
     atomically $ do

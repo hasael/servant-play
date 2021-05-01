@@ -5,13 +5,11 @@ module Impl.GCounter where
 import Domain.GCounter
 import Domain.Transaction
 import Domain.User
-import Data.Ratio
-import Data.Decimal
 
 instance Semigroup TransactionAmount where
   a <> b = TransactionAmount finalAmount trxType
     where
-      calcAmount = fromRational $ toRational ( calculatedTransactionAmount a + calculatedTransactionAmount b) 
+      calcAmount = fromRational $ toRational (calculatedTransactionAmount a + calculatedTransactionAmount b)
       finalAmount = abs calcAmount
       trxType = if calcAmount < 0 then Debit else Credit
 

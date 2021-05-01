@@ -2,33 +2,26 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module Domain.Transaction where
 
+import Control.Monad.Reader
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Decimal
-import Database.PostgreSQL.Simple.FromField ( FromField(fromField) )
-import Database.PostgreSQL.Simple.ToField
-import Database.PostgreSQL.Simple
-import GHC.Base (Double, Eq, Int, Ord, String, undefined, error, IO)
-import GHC.Float.ConversionUtils
-import GHC.Generics
-import GHC.Show 
-import Data.Map
-import GHC.Conc.Sync
-import Servant
-import Prelude as P (Float, Fractional, Integral, Real (toRational), realToFrac, (&&), (+), (<), (==), (>) , ($), (<$>) ,(.))
-import Refined
-import Data.Either
 import Data.Either.Combinators (mapLeft)
-import qualified Data.Text as T
-import Control.Monad.Reader  
+import Data.Maybe
+import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.FromField (FromField (fromField))
+import Database.PostgreSQL.Simple.ToField
 import Domain.Helper
 import Domain.User
-import Data.Maybe
+import GHC.Base (Eq, Int, Ord)
+import GHC.Generics
+import GHC.Show
+import Servant
+import Prelude (Integral, (==))
 
 instance FromJSON Transaction
 
@@ -53,7 +46,6 @@ data TransactionType = Debit | Credit
 newtype TransactionId = TransactionId {t_value :: Int}
   deriving (Eq, Ord, Show, Generic, ToJSON, FromJSON, FromField, ToField, FromHttpApiData)
 
-
 data Transaction = Transaction
   { id :: !TransactionId,
     userId :: !UserId,
@@ -61,6 +53,12 @@ data Transaction = Transaction
     transactionType :: !TransactionType
   }
   deriving (Eq, Show, Generic)
+
+data TransactionAmount = TransactionAmount
+  { amount :: !Amount,
+    transactionType :: !TransactionType
+  }
+  deriving (Show, Generic)
 
 trxAmount :: Transaction -> TransactionAmount
 trxAmount (Transaction _ _ amount trxType) = TransactionAmount amount trxType
@@ -71,10 +69,3 @@ getTransactionId = id
 calculatedTransactionAmount :: Integral i => TransactionAmount -> DecimalRaw i
 calculatedTransactionAmount (TransactionAmount amount Credit) = realFracToDecimal 2 amount
 calculatedTransactionAmount (TransactionAmount amount Debit) = realFracToDecimal 2 (- amount)
-
-data TransactionAmount = TransactionAmount
-  { amount :: !Amount,
-    transactionType :: !TransactionType
-  }
-  deriving (Show, Generic)
-

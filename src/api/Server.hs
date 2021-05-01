@@ -29,10 +29,6 @@ import Domain.TransactionService
     createDebitTransaction,
   )
 
-api :: Proxy API
-api = Proxy
-
-
 userServer :: (DbRepository m env, MonadReader env m, MonadIO m, MonadError ServerError m) => ServerT UserAPI m
 userServer =
   fetchUsers

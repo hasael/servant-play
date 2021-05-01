@@ -14,16 +14,15 @@ module Lib
 where
 
 import qualified Aligner as A
-import qualified Api.Server as S
+import Api.Server
+import Api.AppAPI
 import Domain.DbRepository 
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Domain.AppState
-import Domain.Transaction
 import Control.Concurrent.STM
 import Data.Map
-import Control.Monad.Trans.Reader as R ( ReaderT(runReaderT), ask )
 import Servant ( Handler, Application, hoistServer, serve, runHandler )
 import Control.Monad.Reader
 
@@ -40,7 +39,7 @@ nt :: env -> MyHandler env a -> Handler a
 nt s x = runReaderT x s
 
 app :: (DbRepository (MyHandler env) env, HasAppState env) => env -> Application
-app env = serve S.api $ hoistServer S.api (nt env) S.server
+app env = serve api $ hoistServer api (nt env) server
 
 newState :: IO AppState 
 newState = atomically $ newTVar empty

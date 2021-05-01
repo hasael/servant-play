@@ -23,3 +23,6 @@ type TransactionsAPI =
        )
 type VersionAPI = "version" :> Get '[JSON] String
 type API = UserAPI :<|> TransactionsAPI :<|> VersionAPI
+
+api :: Proxy API
+api = Proxy

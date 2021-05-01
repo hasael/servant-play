@@ -1,22 +1,19 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Impl.RealDb where
 
 import Control.Monad (void)
+import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.ByteString.Char8
 import Data.Pool
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromField (FromField, fromField)
+import Domain.AppState
 import Domain.DbRepository
 import Domain.User
-import Domain.Transaction
-import Domain.Helper
-import Domain.AppState
-import Control.Monad.IO.Class ( MonadIO(liftIO) )
 
 initDb :: Pool Connection -> IO ()
 initDb connectionsPool = withResource connectionsPool $ \conn -> do
@@ -82,10 +79,10 @@ instance DbRepository IO (Pool Connection) where
       [] -> return Nothing
       (x : _) -> return $ Just x
 
-data Env = Env {
-  crdtState :: AppState,
-  connectionsPool :: Pool Connection
-}
+data Env = Env
+  { crdtState :: AppState,
+    connectionsPool :: Pool Connection
+  }
 
 instance HasAppState Env where
   getAppState = crdtState

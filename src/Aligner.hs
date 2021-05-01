@@ -7,15 +7,15 @@ module Aligner
 where
 
 import Control.Monad (void)
-import Data.Map 
+import Control.Monad.Reader
+import Data.Map
+import Domain.AppState
 import Domain.DbRepository
   ( DbRepository (getAllTransactions, updateUserAmount),
   )
 import Domain.GCounter
-import Domain.Transaction 
-import Domain.User 
-import Domain.AppState 
-import Control.Monad.Reader
+import Domain.Transaction
+import Domain.User
 
 merge_ :: (DbRepository m env, GCounter TransactionAmount UserId, MonadReader env m, HasAppState env, MonadIO m) => m ()
 merge_ = do
@@ -31,7 +31,6 @@ start_ = do
   let state = getAppState env
   trxs <- getAllTransactions env
   void $ liftIO $ sequence $ fmap (\t -> increment state (userId t) $ trxAmount t) trxs
-  
 
-updateTrxData :: (DbRepository m env, MonadReader env m, HasAppState env)  => env -> Map UserId TransactionAmount -> m ()
-updateTrxData env map = sequence_ $ mapWithKey  (\k v -> updateUserAmount env k (fromRational $ toRational (calculatedTransactionAmount v)) ) map
+updateTrxData :: (DbRepository m env, MonadReader env m, HasAppState env) => env -> Map UserId TransactionAmount -> m ()
+updateTrxData env map = sequence_ $ mapWithKey (\k v -> updateUserAmount env k (fromRational $ toRational (calculatedTransactionAmount v))) map

@@ -4,29 +4,17 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-
 module Domain.AppState where
 
+import Control.Monad.Reader (ReaderT)
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Decimal
-import Database.PostgreSQL.Simple.FromField ( FromField(fromField) )
-import Database.PostgreSQL.Simple.ToField
-import GHC.Base (Double, Eq, Int, Ord, String, undefined, error, IO)
-import GHC.Float.ConversionUtils
-import GHC.Generics
-import GHC.Show 
 import Data.Map
-import GHC.Conc.Sync
-import Servant
-import Prelude as P (Float, Fractional, Integral, Real (toRational), realToFrac, (&&), (+), (<), (==), (>) , ($), (<$>) ,(.))
-import Refined
-import Data.Either
-import Data.Either.Combinators (mapLeft)
-import qualified Data.Text as T
-import Control.Monad.Reader  
-import Domain.User
-import Domain.Transaction
-
+import Database.PostgreSQL.Simple.FromField (FromField (fromField))
+import Domain.Transaction (TransactionAmount)
+import Domain.User (UserId)
+import GHC.Base (IO)
+import GHC.Conc.Sync (TVar)
+import Servant (Handler)
 
 type AppState = TVar (Map UserId [TransactionAmount])
 
