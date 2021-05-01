@@ -21,7 +21,9 @@ import GHC.Base (Eq, Int, Ord)
 import GHC.Generics
 import GHC.Show
 import Servant
-import Prelude (Integral, (==))
+import Prelude (Integral, (==), ($), error)
+import Data.Either
+import Refined
 
 instance FromJSON Transaction
 
@@ -43,7 +45,7 @@ instance FromRow Transaction
 data TransactionType = Debit | Credit
   deriving (Eq, Show, Generic)
 
-newtype TransactionId = TransactionId {t_value :: Int}
+newtype TransactionId = TransactionId {t_value :: Refined Positive Int}
   deriving (Eq, Ord, Show, Generic, ToJSON, FromJSON, FromField, ToField, FromHttpApiData)
 
 data Transaction = Transaction
@@ -59,6 +61,9 @@ data TransactionAmount = TransactionAmount
     transactionType :: !TransactionType
   }
   deriving (Show, Generic)
+
+mkTransactionId :: Int -> TransactionId
+mkTransactionId id = TransactionId $ fromRight (error "invalid transaction id") $ refine id
 
 trxAmount :: Transaction -> TransactionAmount
 trxAmount (Transaction _ _ amount trxType) = TransactionAmount amount trxType

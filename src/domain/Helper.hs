@@ -1,16 +1,17 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Domain.Helper where
 
 import Data.Either (fromRight)
 import Data.Either.Combinators (mapLeft)
-import Data.Text (pack)
+import Data.Text (pack, unpack)
 import Database.PostgreSQL.Simple.FromField (FromField (fromField))
 import Database.PostgreSQL.Simple.ToField
 import GHC.Base (Double, error)
 import Refined
 import Servant
-import Prelude (($), (.), (<$>))
+import Prelude (($), (.), (<$>), (++))
 
 type Amount = Double
 
@@ -23,4 +24,4 @@ instance (ToField a, Predicate p a) => ToField (Refined p a) where
 instance (FromHttpApiData a, Predicate p a) => FromHttpApiData (Refined p a) where
   parseUrlPiece t = do
     r <- parseUrlPiece t
-    mapLeft (\l -> pack (displayRefineException l)) $ refine r
+    mapLeft (\l -> pack $ "Error parsing '" ++ unpack t ++ "': " ++ (displayRefineException l)) $ refine r

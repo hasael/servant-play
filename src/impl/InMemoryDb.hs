@@ -86,7 +86,7 @@ instance DbRepository IO AppDatabase where
   insertCreditTransaction db userId amount =
     atomically $ do
       currData <- readTVar $ fst db
-      let newId = TransactionId (size currData + 1)
+      let newId = mkTransactionId (size currData + 1)
       let newTrx = Transaction newId userId amount Credit
       let newValues = insert newId newTrx currData
       writeTVar (fst db) newValues
@@ -95,7 +95,7 @@ instance DbRepository IO AppDatabase where
   insertDebitTransaction db userId amount =
     atomically $ do
       currData <- readTVar $ fst db
-      let newId = TransactionId (size currData + 1)
+      let newId = mkTransactionId (size currData + 1)
       let newTrx = Transaction newId userId amount Debit
       let newValues = insert newId newTrx currData
       writeTVar (fst db) newValues
