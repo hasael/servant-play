@@ -84,6 +84,11 @@ runTests env = do
 
 apiSpec :: Application -> Spec
 apiSpec app = with (return app) $ do
+  
+  describe "GET /health" $ do
+    it "reponds 200 /health" $ do
+      get "/health" `shouldRespondWith` 200
+
   describe "POST /user" $ do
     it "response contains created user" $ do
       let userToCreate = User (mkUserId 1) "Isaac" "Newton" 0

@@ -22,7 +22,8 @@ type TransactionsAPI =
            :<|> "debit" :> Capture "userId" UserId :> Capture "amount" Amount :> Post '[JSON] Transaction
        )
 type VersionAPI = "version" :> Get '[JSON] String
-type API = UserAPI :<|> TransactionsAPI :<|> VersionAPI
+type HealthAPI = "health" :> Get '[JSON] String
+type API = UserAPI :<|> TransactionsAPI :<|> VersionAPI :<|> HealthAPI
 
 api :: Proxy API
 api = Proxy

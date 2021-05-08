@@ -46,6 +46,7 @@ server =
   userServer
     :<|> transactionsServer
     :<|> getVersion
+    :<|> getHealth
 
 fetchUsers :: (DbRepository m env, MonadReader env m) => m [User]
 fetchUsers = do
@@ -94,6 +95,9 @@ addDebitTransaction userId amount = do
 
 getVersion :: Monad m => m String
 getVersion = return "0.1.0.4"
+
+getHealth :: Monad m => m String 
+getHealth = return "OK"
 
 notFoundResponse :: (Monad m, MonadError ServerError m) => Maybe a -> m a
 notFoundResponse Nothing = throwError err404
