@@ -22,9 +22,8 @@ main = do
   let initArg = if not $ null args then Just $ head args else Nothing 
   print initArg
   case initArg of
-    Just "local" -> startReal "./local-config.yaml" state
-    Just "dev" -> startReal "./dev-config.yaml" state
-    _ -> startInMemory state
+    Just "mem" -> startInMemory state 
+    _ -> startReal "./local-config.yaml" state
 
 startInMemory :: AppState -> IO ()
 startInMemory state = do
@@ -51,4 +50,9 @@ scheduledR :: Env -> Int -> IO ()
 scheduledR env delay = threadDelay delay >> merge_ env >> scheduledR env delay
 
 readConfig :: FilePath -> IO AppConfig
-readConfig = decodeFileThrow
+readConfig filepath = do 
+  dbConfig <- lookupEnv "DB_CONFIG"
+  print dbConfig
+  case dbConfig of
+    Just config -> return $ AppConfig $ DbConfig config
+    _ -> decodeFileThrow filepath

@@ -6,4 +6,4 @@ USER app
 WORKDIR /home/app/servant-play
 
 RUN nix-build release.nix
-CMD ["/home/app/servant-play/result/bin/servant-play-exe","dev"]
+CMD ["/home/app/servant-play/result/bin/servant-play-exe"]
