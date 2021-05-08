@@ -94,7 +94,7 @@ addDebitTransaction userId amount = do
     CorrectDebit t -> liftIO $ forkIO (void (increment state userId $ trxAmount t)) >> return t
 
 getVersion :: Monad m => m String
-getVersion = return "0.1.0.4"
+getVersion = return "0.1.0.5"
 
 getHealth :: Monad m => m String 
 getHealth = return "OK"
